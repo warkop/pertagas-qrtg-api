@@ -2,69 +2,78 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Helper\Resp;
 use Illuminate\Http\Request;
-
 use App\Models\User;
-use App\Models\Acara;
-
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function login(Request $req)
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
     {
-        $this->validate($req, [
-            'username' => 'required',
-            'password' => 'required'
-        ]);
-
-        $username = $req->input('username');
-        $password = $req->input('password');
-
-        // $data = User::where(['usr_username'=>$username,'usr_pwd'=>$password])->where('aktif', true)->whereNull('deleted_at')->first();
-        $data = User::where(['username' => $username])->where('aktif', true)->whereNull('deleted_at')->first();
-
-        $user = new User();
-
-
-        if (Hash::check($password, $data['usr_pwd'])) {
-            // if($data){
-            if (is_null($data["usr_token"])) {
-                $usr_token = md5("Energeek" . $password . "-token");
-                $usr_token = hash("sha1", $usr_token . date("Y-m-d H:i:s"));
-                $user->where("usr_id", $data["usr_id"])->update(["usr_token" => $usr_token]);
-            } else {
-                $usr_token = $data["usr_token"];
-            }
-            $acara = new Acara;
-            $acr = $acara->where('acr_status', '1')->leftJoin('kota', 'kota_id', 'acr_kota_id')->first();
-            if (empty($acr)) {
-                $data = ["code" => 0, "usr_id" => $data["usr_id"], "usr_role" => $data["usr_role"], "usr_token" => $usr_token, "usr_username" => $data["usr_username"]];
-                return (new Resp())->json(
-                    200,
-                    "Tidak ada acara aktif.",
-                    $data
-                );
-            } else {
-                $data = ["code" => 1, "usr_id" => $data["usr_id"], "usr_role" => $data["usr_role"], "usr_token" => $usr_token, "usr_username" => $data["usr_username"], "acr_id" => $acr["acr_id"], "acr_name" => $acr["acr_name"], "acr_kota" => $acr["kota_nama"], "acr_mulai" => date("d-m-Y", strtotime($acr["acr_mulai"])), "acr_selesai" => date("d-m-Y", strtotime($acr["acr_selesai"]))];
-                return (new Resp())->json(
-                    200,
-                    "Berhasil melakukan login.",
-                    $data
-                );
-            }
-        } else {
-            return (new Resp())->json(
-                404,
-                "User / Password tidak ditemukan.",
-                null
-            );
-        }
+        //
     }
-    
-    public function logout(Request $req)
-    {
 
+    public function index(Request $request)
+    {
+        $responseCode = 403;
+        $responseStatus = '';
+        $responseMessage = '';
+        $responseData = [];
+
+        $rules['username'] = 'required';
+        $rules['password'] = 'required';
+        // $rules['device_id'] = 'required';
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            $responseCode = 400;
+            $responseStatus = 'Missing Param';
+            $responseMessage = 'Silahkan isi form dengan benar terlebih dahulu';
+            $responseData['error_log'] = $validator->errors();
+        } else {
+            $username = $request->input('username');
+            $password = $request->input('password');
+            $device_id = $request->input('device');
+
+            $cek_user = User::where('username', $username)->whereNull('deleted_at')->first();
+
+            if ($cek_user) {
+                if (Hash::check($password, $cek_user['password'])) {
+                    $m_user = User::find($cek_user['user_id']);
+
+                    if (empty($cek_user['token'])) {
+                        $access_token = 'dB528-' . rand_str(10) . date('Y') . rand_str(6) . date('m') . rand_str(6) . date('d') . rand_str(6) . date('H') . rand_str(6) . date('i') . rand_str(6) . date('s');
+
+                        $m_user->token = $access_token;
+                    } else {
+                        $access_token = $cek_user['token'];
+                    }
+
+                    $m_user->usr_device_id = $device_id;
+                    $m_user->save();
+
+                    $responseCode = 200;
+                    $responseData['access_token'] = $access_token;
+                    $responseData['role'] = $m_user->role_id;
+                    $responseMessage = 'Anda berhasil login';
+                } else {
+                    $responseCode = 401;
+                    $responseMessage = 'Username atau Password Anda salah';
+                }
+            } else {
+                $responseCode = 401;
+                $responseMessage = 'Username atau Password Anda salah';
+            }
+        }
+
+        $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
+        return response()->json($response, $responseCode);
     }
 }

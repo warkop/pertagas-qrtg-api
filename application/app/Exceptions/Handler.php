@@ -8,6 +8,8 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Handler extends ExceptionHandler
 {
@@ -45,6 +47,13 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $e)
     {
+        if ($e instanceof NotFoundHttpException) {
+            $response = helpResponse(404);
+            return response()->json($response, 404);
+        } elseif ($e instanceof MethodNotAllowedHttpException) {
+            $response = helpResponse(403, [], 'Anda tidak dapat mengakses halaman ini, silahkan hubungi Administrator');
+            return response()->json($response, 403);
+        }
         return parent::render($request, $e);
     }
 }
