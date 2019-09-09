@@ -1,0 +1,82 @@
+<?php
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
+
+class UsersTableSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        DB::table('users')->insert([
+            'email' => 'energeekmail@gmail.com',
+            'username' => 'super_admin',
+            'password' => app('hash')->make('3n3rg33k'),
+            'role_id' => 1
+        ]);
+        DB::table('users')->insert([
+            'email' =>  'sppbe1' . '@gmail.com',
+            'username' => 'sppbe1',
+            'password' => app('hash')->make('3n3rg33k'),
+            'role_id' => 2
+        ]);
+        DB::table('users')->insert([
+            'email' => 'sppbe2' . '@gmail.com',
+            'username' => 'sppbe2',
+            'password' => app('hash')->make('3n3rg33k'),
+            'role_id' => 2
+        ]);
+        DB::table('users')->insert([
+            'email' => 'bpt1' . '@gmail.com',
+            'username' => 'bpt1',
+            'password' => app('hash')->make('3n3rg33k'),
+            'role_id' => 3
+        ]);
+        DB::table('users')->insert([
+            'email' => 'bpt2' . '@gmail.com',
+            'username' => 'bpt2',
+            'password' => app('hash')->make('3n3rg33k'),
+            'role_id' => 3
+        ]);
+        DB::table('users')->insert([
+            'email' => 'mwh1' . '@gmail.com',
+            'username' => 'mwh1',
+            'password' => app('hash')->make('3n3rg33k'),
+            'role_id' => 4
+        ]);
+        DB::table('users')->insert([
+            'email' => 'mwh2' . '@gmail.com',
+            'username' => 'mwh2',
+            'password' => app('hash')->make('3n3rg33k'),
+            'role_id' => 4
+        ]);
+        DB::table('users')->insert([
+            'email' => 'agents1' . '@gmail.com',
+            'username' => 'agents1',
+            'password' => app('hash')->make('3n3rg33k'),
+            'role_id' => 5
+        ]);
+        DB::table('users')->insert([
+            'email' => 'agents2' . '@gmail.com',
+            'username' => 'agents2',
+            'password' => app('hash')->make('3n3rg33k'),
+            'role_id' => 5
+        ]);
+        DB::table('users')->insert([
+            'email' => 'manufacturer1' . '@gmail.com',
+            'username' => 'manufacturer1',
+            'password' => app('hash')->make('3n3rg33k'),
+            'role_id' => 6
+        ]);
+        DB::table('users')->insert([
+            'email' => 'manufacturer2' . '@gmail.com',
+            'username' => 'manufacturer2',
+            'password' => app('hash')->make('3n3rg33k'),
+            'role_id' => 6
+        ]);
+    }
+}
