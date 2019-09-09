@@ -2,11 +2,14 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
+$envFile = '.env';
+
 try {
-    (new Dotenv\Dotenv(__DIR__.'/../'))->load();
+    (new Dotenv\Dotenv(__DIR__ . '/../', $envFile))->load();
 } catch (Dotenv\Exception\InvalidPathException $e) {
     //
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -23,9 +26,9 @@ $app = new Laravel\Lumen\Application(
     realpath(__DIR__.'/../')
 );
 
-// $app->withFacades();
-
-// $app->withEloquent();
+$app->withFacades();
+$app->configure('database');
+$app->withEloquent();
 
 /*
 |--------------------------------------------------------------------------
@@ -63,9 +66,10 @@ $app->singleton(
 //    App\Http\Middleware\ExampleMiddleware::class
 // ]);
 
-// $app->routeMiddleware([
-//     'auth' => App\Http\Middleware\Authenticate::class,
-// ]);
+$app->routeMiddleware([
+    'auth' => App\Http\Middleware\Authenticate::class,
+    'eauth' => App\Http\Middleware\EnergeekAuthMiddleware::class,
+]);
 
 /*
 |--------------------------------------------------------------------------

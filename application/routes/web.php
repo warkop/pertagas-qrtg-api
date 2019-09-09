@@ -14,3 +14,8 @@
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
+$router->group(['middleware' => ['eauth']], function () use ($router) {
+    /* Auth */
+    $router->post('auth/login', 'AuthController@login');
+    $router->post('auth/logout', 'AuthController@logout');
+});

@@ -11,7 +11,8 @@
 |
 */
 
-$app = require __DIR__.'/../bootstrap/app.php';
+require __DIR__.'/application/helpers/autoload.php';
+$app = require __DIR__.'/application/bootstrap/app.php';
 
 /*
 |--------------------------------------------------------------------------
