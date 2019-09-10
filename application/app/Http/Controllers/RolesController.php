@@ -18,8 +18,16 @@ class RolesController extends Controller
 
     public function index()
     {
-        $res = new Roles;
+        $responseCode = 403;
+        $responseStatus = '';
+        $responseMessage = '';
+        $responseData = [];
 
-        return $res->all();
+        $res = new Roles;
+        $responseData = $res->all();
+        $responseCode = 200;
+        
+        $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
+        return response()->json($response, $responseCode);
     }
 }

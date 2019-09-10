@@ -18,8 +18,17 @@ class SeqSchemeGroupController extends Controller
 
     public function index()
     {
+        $responseCode = 403;
+        $responseStatus = '';
+        $responseMessage = '';
+        $responseData = [];
+        
         $res = new SeqSchemeGroup;
+        
+        $responseData = $res->all();
+        $responseCode = 200;
 
-        return $res->all();
+        $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
+        return response()->json($response, $responseCode);
     }
 }

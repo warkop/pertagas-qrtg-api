@@ -18,8 +18,17 @@ class ManufacturerController extends Controller
 
     public function index()
     {
+        $responseCode = 403;
+        $responseStatus = '';
+        $responseMessage = '';
+        $responseData = [];
+
         $res = new Manufacturer;
 
-        return $res->all();
+        $responseData = $res->all();
+        $responseCode = 200;
+
+        $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
+        return response()->json($response, $responseCode);
     }
 }

@@ -18,8 +18,16 @@ class ResultsController extends Controller
 
     public function index()
     {
-        $res = new Results;
+        $responseCode = 403;
+        $responseStatus = '';
+        $responseMessage = '';
+        $responseData = [];
 
-        return $res->all();
+        $res = new Results;
+        $responseData = $res->all();
+        $responseCode = 200;
+
+        $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
+        return response()->json($response, $responseCode);
     }
 }
