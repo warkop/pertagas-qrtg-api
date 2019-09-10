@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Http\Models\User;
+use App\Http\Models\Users;
 use Closure;
 
 class EnergeekAuthMiddleware
@@ -24,9 +24,7 @@ class EnergeekAuthMiddleware
         $access_token = $request->header('access-token') ? $request->header('access-token') : $request->input('access_token');
 
         if ($access_token) {
-            $auth = User::get_by_access_token($access_token);
-
-            $parameters = $request->route('cek');
+            $auth = Users::get_by_access_token($access_token);
 
             if ($auth) {
                 if (!empty($idRole)) {
