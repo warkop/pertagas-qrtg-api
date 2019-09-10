@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;
+use App\Http\Models\Users;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 
@@ -42,21 +42,21 @@ class AuthController extends Controller
             $password = $request->input('password');
             $device_id = $request->input('device');
 
-            $cek_user = User::where('username', $username)->whereNull('deleted_at')->first();
+            $cek_user = Users::where('username', $username)->whereNull('deleted_at')->first();
 
             if ($cek_user) {
                 if (Hash::check($password, $cek_user['password'])) {
-                    $m_user = User::find($cek_user['user_id']);
+                    $m_user = Users::find($cek_user['user_id']);
 
                     if (empty($cek_user['token'])) {
-                        $access_token = 'dB528-' . rand_str(10) . date('Y') . rand_str(6) . date('m') . rand_str(6) . date('d') . rand_str(6) . date('H') . rand_str(6) . date('i') . rand_str(6) . date('s');
+                        $access_token = 'QrTg-' . rand_str(10) . date('Y') . rand_str(6) . date('m') . rand_str(6) . date('d') . rand_str(6) . date('H') . rand_str(6) . date('i') . rand_str(6) . date('s');
 
                         $m_user->token = $access_token;
                     } else {
                         $access_token = $cek_user['token'];
                     }
 
-                    $m_user->usr_device_id = $device_id;
+                    $m_user->device = $device_id;
                     $m_user->save();
 
                     $responseCode = 200;
@@ -73,6 +73,33 @@ class AuthController extends Controller
             }
         }
 
+        $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
+        return response()->json($response, $responseCode);
+    }
+
+    public function logout(Request $req)
+    {
+        $responseCode = 403;
+        $responseStatus = '';
+        $responseMessage = '';
+        $responseData = [];
+
+        $this->validate($req, [
+            'token' => 'required',
+        ]);
+        
+        $user = new Users;
+        $data = $user->where([["token", "=", $req->get("token")]])->first();
+        if (is_null($data)) {
+            $responseCode = 400;
+            $responseMessage = "User tidak ditemukan.";
+        } else {
+            $user->where("user_id", $data["user_id"])->update(["token" => null]);
+            $responseCode = 200;
+            $responseMessage = "Berhasil melakukan logout.";
+                
+            
+        }
         $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
         return response()->json($response, $responseCode);
     }
