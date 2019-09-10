@@ -19,8 +19,8 @@ class CreateTableManufacturer extends Migration
             $table->string('manufacturer_address')->nullable();
             $table->float('lat')->nullable();
             $table->float('long')->nullable();
-            $table->datetime('created_by')->nullable();
-            $table->datetime('updated_by')->nullable();
+            $table->string('created_by')->nullable();
+            $table->string('updated_by')->nullable();
             $table->string('deleted_by')->nullable();
             $table->timestamps();
             $table->softDeletes()->nullable();
