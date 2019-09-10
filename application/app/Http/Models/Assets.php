@@ -7,14 +7,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 use DB;
 
-class Users extends Model
+class Assets extends Model
 {
     use SoftDeletes;
-    protected $table = 'users';
-    protected $primaryKey = 'user_id';
+    protected $table = 'assets';
+    protected $primaryKey = 'asset_id';
 
     protected $guarded = [
-        'user_id',
+        'asset_id',
     ];
 
     protected $hidden = [
