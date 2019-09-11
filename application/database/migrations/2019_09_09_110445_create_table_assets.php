@@ -17,7 +17,7 @@ class CreateTableAssets extends Migration
             $table->bigIncrements('asset_id');
             $table->integer('asset_type_id')->nullable();
             $table->integer('manufacturer_id')->nullable();
-            $table->integer('seq_schema_group_id')->nullable();
+            $table->integer('seq_scheme_group_id')->nullable();
             $table->text('asset_desc')->nullable();
             $table->float('gross_weight')->nullable();
             $table->float('net_weight')->nullable();
