@@ -29,4 +29,16 @@ class Transactions extends Model
     ];
 
     public $timestamps  = false;
+
+    public function getTransactionAsset($id_asset)
+    {
+        $result = DB::table(DB::raw('transactions'))
+            ->select(DB::raw('*'))
+            ->where(DB::raw('asset_id'), '=', $id_asset)
+            ->orderBy('created_at', 'desc')
+            ->take(1)
+            ->get();
+
+        return $result;
+    }
 }

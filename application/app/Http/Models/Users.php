@@ -17,7 +17,7 @@ class Users extends Model implements AuthenticatableContract, AuthorizableContra
 
     use SoftDeletes;
 
-    protected $table = 'user';
+    protected $table = 'users';
     protected $primaryKey = 'user_id';
 
     /**
@@ -91,4 +91,9 @@ class Users extends Model implements AuthenticatableContract, AuthorizableContra
 
         return $result;
     }
+
+    // public function roles()
+    // {
+    //     return $this->hasOne('App\Http\Models\Roles');
+    // }
 }

@@ -62,6 +62,7 @@ class AuthController extends Controller
                     $responseCode = 200;
                     $responseData['access_token'] = $access_token;
                     $responseData['role'] = $m_user->role_id;
+                    $responseData['id_user'] = $m_user->user_id;
                     $responseMessage = 'Anda berhasil login';
                 } else {
                     $responseCode = 401;
@@ -102,5 +103,10 @@ class AuthController extends Controller
         }
         $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
         return response()->json($response, $responseCode);
+    }
+
+    public function listUser()
+    {
+        
     }
 }
