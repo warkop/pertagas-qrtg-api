@@ -26,7 +26,7 @@ $db_config = [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => env('DB_CONNECTION', 'postgres'),
 
     /*
     |--------------------------------------------------------------------------
@@ -80,7 +80,7 @@ $db_config = [
             'password' => env('DB_PASSWORD', ''),
             'charset'  => env('DB_CHARSET', 'utf8'),
             'prefix'   => env('DB_PREFIX', ''),
-            'schema'   => env('DB_SCHEMA', 'hubungan_hukum'),
+            'schema'   => env('DB_SCHEMA', 'public'),
         ],
 
         'pgsql2' => [
