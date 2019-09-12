@@ -4,14 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Models\Assets;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
 
 class AssetsController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
+    private $responseCode = 403;
+    private $responseStatus = '';
+    private $responseMessage = '';
+    private $responseData = [];
+
     public function __construct()
     {
         //
@@ -19,26 +21,33 @@ class AssetsController extends Controller
 
     public function index()
     {
-        $responseCode = 403;
-        $responseStatus = '';
-        $responseMessage = '';
-        $responseData = [];
-
         $res = new Assets;
 
-        $responseData = $res->all();
-        $responseCode = 200;
+        $this->responseData = $res->all();
+        $this->responseCode = 200;
 
-        $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
-        return response()->json($response, $responseCode);
+        $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+        return response()->json($response, $this->responseCode);
     }
 
     public function store(Request $req)
     {
-        $responseCode = 403;
-        $responseStatus = '';
-        $responseMessage = '';
-        $responseData = [];
+        $validator = Validator::make($req->all(), [
+            'id_type_asset' => 'required',
+            'id_manufacturer' => 'required',
+            'id_seq_scheme_group' => 'required',
+            'serial_number' => 'required',
+            'expiry_date' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        }
+
 
         $id_type_asset          = $req->input('id_type_asset');
         $id_manufacturer        = $req->input('id_manufacturer');
@@ -71,19 +80,19 @@ class AssetsController extends Controller
         $saved = $res->save();
 
         if (!$saved) {
-            $responseCode = 502;
-            $responseMessage = 'Data gagal disimpan!';
+            $this->responseCode = 502;
+            $this->responseMessage = 'Data gagal disimpan!';
 
-            $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         } else {
-            $responseCode = 201;
-            $responseMessage = 'Asset berhasil disimpan!';
-            $responseData = $saved;
+            $this->responseCode = 201;
+            $this->responseMessage = 'Asset berhasil disimpan!';
+            $this->responseData = $saved;
 
-            $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         }
 
-        return response()->json($response, $responseCode);
+        return response()->json($response, $this->responseCode);
     }
 
     public function delete(Request $req)

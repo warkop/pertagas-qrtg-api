@@ -11,6 +11,9 @@
 |
 */
 
+use Illuminate\Http\Request;
+
+
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
@@ -44,6 +47,7 @@ $router->group(['prefix' => 'stations', 'middleware' => 'eauth'], function () us
 
 $router->group(['prefix' => 'seqscheme', 'middleware' => 'eauth'], function () use ($router) {
     $router->get('/', 'SeqSchemeController@index');
+    $router->get('/see_the_flow', 'SeqSchemeController@seeTheFlow');
 });
 
 $router->group(['prefix' => 'seqschemegroup', 'middleware' => 'eauth'], function () use ($router) {
@@ -56,6 +60,7 @@ $router->group(['prefix' => 'transactions', 'middleware' => 'eauth'], function (
     $router->put('/save[/{asset_id}]', 'TransactionsController@store');
     $router->get('/current_status', 'TransactionsController@currentStatus');
     $router->post('/accept', 'TransactionsController@accept');
+    $router->post('/processing', 'TransactionsController@processing');
 });
 
 $router->group(['prefix' => 'assets', 'middleware' => 'eauth'], function () use ($router) {
@@ -64,3 +69,4 @@ $router->group(['prefix' => 'assets', 'middleware' => 'eauth'], function () use 
     $router->delete('/delete', 'AssetsController@delete');
     $router->delete('/delete_all', 'AssetsController@deleteAll');
 });
+
