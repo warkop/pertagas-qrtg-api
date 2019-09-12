@@ -12,7 +12,7 @@ class SeqSchemeTableSeeder extends Seeder
     public function run()
     {
         DB::table('seq_scheme')->insert([
-            'station_id' => 1,
+            'station_id' => 2,
             'predecessor_station_id' => null,
             'result_id' => null,
             'seq_scheme_group_id' => 1,
@@ -24,7 +24,7 @@ class SeqSchemeTableSeeder extends Seeder
         
         DB::table('seq_scheme')->insert([
             'station_id' => 2,
-            'predecessor_station_id' => 1,
+            'predecessor_station_id' => null,
             'result_id' => 2,
             'seq_scheme_group_id' => 1,
             'scheme_name' => 'Registered Newly Cylinders',
