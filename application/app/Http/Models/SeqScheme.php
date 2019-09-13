@@ -51,7 +51,7 @@ class SeqScheme extends Model
     public function checkPosition($id_transaction)
     {
         $query = DB::table(DB::raw('transactions t'))
-        ->select('*')
+        ->select(DB::raw('t.transaction_id, a.asset_id, s.station_id, t.result_id, a.asset_desc, s.station_name'))
         ->leftJoin(DB::raw('assets a'), 't.asset_id', '=', 'a.asset_id')
         ->leftJoin(DB::raw('stations s'), 's.station_id', '=', 't.station_id')
         ->where('t.transaction_id', $id_transaction)

@@ -54,6 +54,10 @@ $router->group(['prefix' => 'seqschemegroup', 'middleware' => 'eauth'], function
     $router->get('/', 'SeqSchemeGroupController@index');
 });
 
+$router->group(['prefix' => 'users', 'middleware' => 'eauth'], function () use ($router) {
+    $router->get('/', 'UsersController@index');
+});
+
 $router->group(['prefix' => 'transactions', 'middleware' => 'eauth'], function () use ($router) {
     $router->get('/', 'TransactionsController@index');
     $router->put('/create', 'TransactionsController@createTransaction');

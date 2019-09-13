@@ -27,10 +27,12 @@ class TransactionsController extends Controller
         return $res->all();
     }
 
-    public function createTransaction(Request $req)
+    public function store(Request $req)
     {
         $validator = Validator::make($req->all(), [
             'asset_id' => 'required',
+            'result_id' => 'required',
+            // 'file' => 'required|file|max:9000',
         ]);
 
         if ($validator->fails()) {
@@ -43,20 +45,23 @@ class TransactionsController extends Controller
 
         $id_asset       = $req->input('asset_id');
         $res_assets = Assets::find($id_asset);
-
-
         if ($res_assets !== null) {
-            
-            $snapshot_url   = $req->input('snapshot_url');
+            // $snapshot_url   = $req->input('snapshot_url');
             $created_by     = $req->input('created_by');
 
-            $res_trans = new Transactions;
-            // $res_seq_scheme = new SeqScheme;
+            $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('created_at', 'desc')->take(1)->get();
+
+            if ($res_trans->isEmpty()) {
+                $station = 2;
+            } else {
+                
+            }
 
             $arr_store = [
                 'asset_id' => $id_asset,
-                'station_id' => 2,
-                'snapshot_url' => $snapshot_url,
+                // 'station_id' => 2,
+                // 'station_id' => 2,
+                // 'snapshot_url' => $snapshot_url,
                 'created_at' => date('Y-m-d H:i:s'),
                 'created_by' => $created_by,
             ];
@@ -177,7 +182,7 @@ class TransactionsController extends Controller
                 }
             }
         }
-
+        // var_dump($res_transaction->result_id);
         if ($res_transaction->station_id == 3) {
             $res_seq_scheme->where('predecessor_station_id', 2)->where('station_id', 1)->where('result_id', $res_transaction->result_id)->get();
             if ($res_seq_scheme !== null) {
@@ -207,10 +212,31 @@ class TransactionsController extends Controller
             }
         }
 
+        
         if ($res_transaction->station_id == 3) {
+            $res_seq_scheme->where('predecessor_station_id', 2)->where('station_id', 1)->where('result_id', $res_transaction->result_id)->get();
             if ($res_transaction->predecessor_station == 2) { 
                 if ($res_transaction->result_id == 1) {
-                    return 'phase : 3';
+                    // return 'phase : 3';
+                    $res_transaction->result_id = 3;
+                    $res_transaction->updated_at = date('Y-m-d H:i:s');
+                    $res_transaction->updated_by = 1;
+                    $saved = $res_transaction->save();
+
+                    if (!$saved) {
+                        $this->responseCode = 502;
+                        $this->responseMessage = 'Tahap 2 gagal dilalui! Ada yang salah saat memproses di database!';
+
+                        $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                    } else {
+                        $this->responseCode     = 200;
+                        $this->responseMessage  = 'Tahap 2 berhasil!';
+                        $this->responseData     = $res_transaction;
+
+                        $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                    }
+
+                    return response()->json($response, $this->responseCode);
                 }
             }
         }
@@ -232,8 +258,7 @@ class TransactionsController extends Controller
         $res_seq_scheme = new SeqScheme;
 
         $res_trans = $res_seq_scheme->checkPosition($id_transaction);
-
-        if ($res_trans === null) {
+        if ($res_trans->isEmpty()) {
             $this->responseCode = 400;
             $this->responseMessage = 'Data tidak ditemukan!';
         } else {
