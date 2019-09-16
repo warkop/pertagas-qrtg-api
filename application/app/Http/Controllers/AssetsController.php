@@ -30,14 +30,30 @@ class AssetsController extends Controller
         return response()->json($response, $this->responseCode);
     }
 
+    public function detail($id_asset)
+    {
+        $assets = new Assets;
+        $res = $assets->getDetail($id_asset);
+        if ($res->isEmpty()) {
+            $this->responseCode = 400;
+            $this->responseMessage = 'Asset tidak ditemukan';
+        } else {
+            $this->responseCode = 200;
+            $this->responseData = $res;
+        }
+
+        $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+        return response()->json($response, $this->responseCode);
+    }
+
     public function store(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'id_type_asset' => 'required',
-            'id_manufacturer' => 'required',
-            'id_seq_scheme_group' => 'required',
-            'serial_number' => 'required',
-            'expiry_date' => 'required',
+            'id_type_asset'         => 'required',
+            'id_manufacturer'       => 'required',
+            'id_seq_scheme_group'   => 'required',
+            'serial_number'         => 'required',
+            'expiry_date'           => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -47,7 +63,6 @@ class AssetsController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         }
-
 
         $id_type_asset          = $req->input('id_type_asset');
         $id_manufacturer        = $req->input('id_manufacturer');
@@ -62,33 +77,41 @@ class AssetsController extends Controller
         $height                 = $req->input('height');
         $width                  = $req->input('width');
 
-        $res = new Assets;
-        
-        $res->asset_type_id         = $id_type_asset;
-        $res->manufacturer_id       = $id_manufacturer;
-        $res->seq_scheme_group_id   = $id_seq_scheme_group;
-        $res->asset_desc            = $asset_desc;
-        $res->gross_weight          = $gross_weight;
-        $res->net_weight            = $net_weight;
-        $res->pics_url              = $pics_url;
-        $res->serial_number         = $serial_number;
-        $res->manufacture_date      = $manufacture_date;
-        $res->expiry_date           = $expiry_date;
-        $res->height                = $height;
-        $res->width                = $width;
+        $temp = Assets::where('serial_number',$serial_number)->get();
+        if ($temp->isEmpty()) {
+            $res = new Assets;
 
-        $saved = $res->save();
+            $res->asset_type_id         = $id_type_asset;
+            $res->manufacturer_id       = $id_manufacturer;
+            $res->seq_scheme_group_id   = $id_seq_scheme_group;
+            $res->asset_desc            = $asset_desc;
+            $res->gross_weight          = $gross_weight;
+            $res->net_weight            = $net_weight;
+            $res->pics_url              = $pics_url;
+            $res->serial_number         = $serial_number;
+            $res->manufacture_date      = $manufacture_date;
+            $res->expiry_date           = $expiry_date;
+            $res->height                = $height;
+            $res->width                = $width;
 
-        if (!$saved) {
-            $this->responseCode = 502;
-            $this->responseMessage = 'Data gagal disimpan!';
+            $saved = $res->save();
 
-            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            if (!$saved) {
+                $this->responseCode = 502;
+                $this->responseMessage = 'Data gagal disimpan!';
+
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            } else {
+                $this->responseCode = 201;
+                $this->responseMessage = 'Asset berhasil disimpan!';
+                $this->responseData = $saved;
+
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            }
         } else {
-            $this->responseCode = 201;
-            $this->responseMessage = 'Asset berhasil disimpan!';
-            $this->responseData = $saved;
-
+            $this->responseCode = 400;
+            $this->responseData = $req->all();
+            $this->responseMessage = 'Serial Number sudah ada!';
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         }
 

@@ -107,6 +107,14 @@ class ResultsTableSeeder extends Seeder
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),
         ]);
+        
+        DB::table('results')->insert([
+            'result_name' => 'UR',
+            'result_desc' => 'Unregistered',
+            'created_by' => 1,
+            'created_at' => date("Y-m-d H:i:s"),
+            'from_date' => date('Y-m-d H:i:s'),
+        ]);
 
         
     }

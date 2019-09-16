@@ -14,7 +14,7 @@ class SeqSchemeTableSeeder extends Seeder
         DB::table('seq_scheme')->insert([
             'station_id' => 2,
             'predecessor_station_id' => null,
-            'result_id' => null,
+            'result_id' => 13,
             'seq_scheme_group_id' => 1,
             'scheme_name' => 'Unregistered New Cylinders',
             'created_by' => 1,
@@ -24,8 +24,8 @@ class SeqSchemeTableSeeder extends Seeder
         
         DB::table('seq_scheme')->insert([
             'station_id' => 2,
-            'predecessor_station_id' => null,
-            'result_id' => 2,
+            'predecessor_station_id' => 2,
+            'result_id' => 3,
             'seq_scheme_group_id' => 1,
             'scheme_name' => 'Registered Newly Cylinders',
             'created_by' => 1,
@@ -186,6 +186,17 @@ class SeqSchemeTableSeeder extends Seeder
             'result_id' => 12,
             'seq_scheme_group_id' => 1,
             'scheme_name' => 'Empty Cylinders Cylinder Type E',
+            'created_by' => 1,
+            'created_at' => date("Y-m-d H:i:s"),
+            'from_date' => date('Y-m-d H:i:s'),
+        ]);
+
+        DB::table('seq_scheme')->insert([
+            'station_id' => 4,
+            'predecessor_station_id' => 3,
+            'result_id' => 1,
+            'seq_scheme_group_id' => 1,
+            'scheme_name' => 'Cylinders Type V',
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),

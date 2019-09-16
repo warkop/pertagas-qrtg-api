@@ -61,15 +61,16 @@ $router->group(['prefix' => 'users', 'middleware' => 'eauth'], function () use (
 $router->group(['prefix' => 'transactions', 'middleware' => 'eauth'], function () use ($router) {
     $router->get('/', 'TransactionsController@index');
     $router->put('/create', 'TransactionsController@createTransaction');
-    $router->put('/save[/{asset_id}]', 'TransactionsController@store');
-    $router->get('/current_status', 'TransactionsController@currentStatus');
-    $router->post('/accept', 'TransactionsController@accept');
+    $router->post('/save', 'TransactionsController@store');
+    $router->get('/current_status/{id_asset}', 'TransactionsController@currentStatus');
+    $router->post('/generate_result', 'TransactionsController@generateResult');
     $router->post('/processing', 'TransactionsController@processing');
 });
 
 $router->group(['prefix' => 'assets', 'middleware' => 'eauth'], function () use ($router) {
     $router->get('/', 'AssetsController@index');
     $router->put('/save', 'AssetsController@store');
+    $router->get('/detail[/{asset_id}]', 'AssetsController@detail');
     $router->delete('/delete', 'AssetsController@delete');
     $router->delete('/delete_all', 'AssetsController@deleteAll');
 });
