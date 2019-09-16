@@ -34,17 +34,6 @@ class SeqSchemeTableSeeder extends Seeder
         ]);
 
         DB::table('seq_scheme')->insert([
-            'station_id' => 3,
-            'predecessor_station_id' => 2,
-            'result_id' => 1,
-            'seq_scheme_group_id' => 1,
-            'scheme_name' => 'Pre-Filling Checking Plant',
-            'created_by' => 1,
-            'created_at' => date("Y-m-d H:i:s"),
-            'from_date' => date('Y-m-d H:i:s'),
-        ]);
-
-        DB::table('seq_scheme')->insert([
             'station_id' => 4,
             'predecessor_station_id' => 3,
             'result_id' => 2,
