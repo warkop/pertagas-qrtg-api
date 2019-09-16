@@ -30,6 +30,12 @@ class AssetsController extends Controller
         return response()->json($response, $this->responseCode);
     }
 
+    public function testDetail($id_asset)
+    {
+        $res = Assets::find($id_asset)->assetType()->get();
+        return $res;
+    }
+
     public function detail($id_asset)
     {
         $assets = new Assets;
@@ -104,13 +110,13 @@ class AssetsController extends Controller
             } else {
                 $this->responseCode = 201;
                 $this->responseMessage = 'Asset berhasil disimpan!';
-                $this->responseData = $saved;
+                $this->responseData = $req->all();
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             }
         } else {
             $this->responseCode = 400;
-            $this->responseData = $req->all();
+            $this->responseData = $req->input('serial_number');
             $this->responseMessage = 'Serial Number sudah ada!';
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         }

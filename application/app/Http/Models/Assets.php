@@ -30,6 +30,11 @@ class Assets extends Model
 
     public $timestamps  = false;
 
+    public function assetType()
+    {
+        return $this->hasMany('App\Http\Models\AssetType', 'asset_type_id', 'asset_type_id');
+    }
+
     public function getDetail($id_asset)
     {
         $query = DB::table(DB::raw('assets a'))

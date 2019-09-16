@@ -73,5 +73,6 @@ $router->group(['prefix' => 'assets', 'middleware' => 'eauth'], function () use 
     $router->get('/detail[/{asset_id}]', 'AssetsController@detail');
     $router->delete('/delete', 'AssetsController@delete');
     $router->delete('/delete_all', 'AssetsController@deleteAll');
+    $router->get('/test_detail[/{asset_id}]', 'AssetsController@testDetail');
 });
 
