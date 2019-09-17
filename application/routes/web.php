@@ -36,6 +36,10 @@ $router->group(['prefix' => 'asset_type', 'middleware' => 'eauth'], function () 
     $router->get('/', 'AssetTypeController@index');
 });
 
+$router->group(['prefix' => 'report_type', 'middleware' => 'eauth'], function () use ($router) {
+    $router->get('/', 'ReportTypeController@index');
+});
+
 $router->group(['prefix' => 'roles', 'middleware' => 'eauth'], function () use ($router) {
     $router->get('/', 'RolesController@index');
     $router->get('/get_users[/{user_id}]', 'RolesController@getUsers');
@@ -70,7 +74,7 @@ $router->group(['prefix' => 'transactions', 'middleware' => 'eauth'], function (
 $router->group(['prefix' => 'assets', 'middleware' => 'eauth'], function () use ($router) {
     $router->get('/', 'AssetsController@index');
     $router->put('/save', 'AssetsController@store');
-    $router->get('/detail[/{asset_id}]', 'AssetsController@detail');
+    $router->get('/detail', 'AssetsController@detail');
     $router->delete('/delete/{asset_id}', 'AssetsController@delete');
     $router->delete('/delete_all', 'AssetsController@deleteAll');
     $router->get('/test_detail[/{asset_id}]', 'AssetsController@testDetail');
@@ -81,6 +85,6 @@ $router->group(['prefix' => 'stock_movement', 'middleware' => 'eauth'], function
     $router->put('/save', 'StockMovementController@store');
     $router->delete('/delete/{stock_movement_id}', 'StockMovementController@delete');
     $router->get('/save', 'StockMovementController@store');
-    $router->put('/save_asset/{stock_movement_id}', 'StockMovementController@storeAssets');
+    $router->put('/save_asset', 'StockMovementController@storeAssets');
     $router->delete('/delete_all', 'StockMovementController@deleteAll');
 });

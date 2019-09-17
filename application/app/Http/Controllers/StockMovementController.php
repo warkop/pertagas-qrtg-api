@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Models\StockMovement;
 use App\Http\Models\DetailAssetStock;
+use App\Http\Models\Stations;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -20,15 +21,6 @@ class StockMovementController extends Controller
         //
     }
 
-    private function generateRandomString()
-    {
-        for ($randomNumber = mt_rand(1, 9), $i = 1; $i < 10; $i++) {
-            $randomNumber .= mt_rand(0, 11);
-        }
-
-        return 'STA'. $randomNumber;
-    }
-
     public function index(Request $req)
     {
         $search     = $req->input('search');
@@ -39,6 +31,11 @@ class StockMovementController extends Controller
         $res = new StockMovement;
 
         return $res->getAll();
+    }
+
+    public function viewAssets()
+    {
+        
     }
 
     public function store(Request $req)
@@ -105,8 +102,10 @@ class StockMovementController extends Controller
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             } else {
+                $temp_station = Stations::find($id_station)->first();
+
                 $stock_movement = StockMovement::find($saved->stock_movement_id);
-                $stock_movement->document_number = 'STA'.date('Ymd').$saved->stock_movement_id;
+                $stock_movement->document_number = $temp_station->abbreviation.date('Ymd').$saved->stock_movement_id;
                 $stock_movement->save();
 
                 $this->responseCode = 201;
@@ -119,39 +118,58 @@ class StockMovementController extends Controller
         }
     }
 
-    public function storeAssets(Request $req, $id_stock_movement)
+    public function storeAssets(Request $req)
     {
-        $stock_movement = StockMovement::where('stock_movement_id', $id_stock_movement)->get();
-        if (!$stock_movement->isEmpty()) {
-            $collection_asset_id = $req->input('asset_id');
-            $user = $req->get('my_auth');
-            DetailAssetStock::where('stock_movement_id', $id_stock_movement)->forceDelete();
+        $id_stock_movement = $req->input('stock_movement_id');
+        $temp_asset_id = $req->input('asset_id');
 
-            for ($i = 0; $i < count($collection_asset_id); $i++) {
-                $arr = [
-                    'stock_movement_id' => $id_stock_movement,
-                    'asset_id' => $collection_asset_id[$i],
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'created_by' => $user->id_user,
-                ];
+        $validator = Validator::make($req->all(), [
+            'stock_movement_id' => [
+                'required',
+                Rule::exists('stock_movement')->where(function ($query) use ($id_stock_movement) {
+                    $query->where('stock_movement_id',  $id_stock_movement);
+                })
+            ],
+            
+        ]);
 
-                DetailAssetStock::create($arr);
-            }
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseMessage = $validator->errors();
 
-            $this->responseCode = 201;
-            $this->responseMessage = 'Data berhasil disimpan!';
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
-
             return response()->json($response, $this->responseCode);
         } else {
-            $this->responseCode = 400;
-            $this->responseMessage = 'Stock Movement tidak ditemukan!';
-            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            $stock_movement = StockMovement::where('stock_movement_id', $id_stock_movement)->get();
+            if (!$stock_movement->isEmpty()) {
+                $collection_asset_id = $req->input('asset_id');
+                $user = $req->get('my_auth');
+                DetailAssetStock::where('stock_movement_id', $id_stock_movement)->forceDelete();
 
-            return response()->json($response, $this->responseCode);
+                for ($i = 0; $i < count($collection_asset_id); $i++) {
+                    $arr = [
+                        'stock_movement_id' => $id_stock_movement,
+                        'asset_id' => $collection_asset_id[$i],
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'created_by' => $user->id_user,
+                    ];
+
+                    DetailAssetStock::create($arr);
+                }
+
+                $this->responseCode = 201;
+                $this->responseMessage = 'Data berhasil disimpan!';
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+
+                return response()->json($response, $this->responseCode);
+            } else {
+                $this->responseCode = 400;
+                $this->responseMessage = 'Stock Movement tidak ditemukan!';
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+
+                return response()->json($response, $this->responseCode);
+            }
         }
-
-        
     }
 
     public function delete($id_stock_movement)

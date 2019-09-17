@@ -35,7 +35,7 @@ class Assets extends Model
         return $this->hasMany('App\Http\Models\AssetType', 'asset_type_id', 'asset_type_id');
     }
 
-    public function getDetail($id_asset)
+    public function getDetail($serial_number)
     {
         $query = DB::table(DB::raw('assets a'))
         ->selectRaw('
@@ -54,7 +54,7 @@ class Assets extends Model
         a.created_at,
         a.updated_at')
         ->join(DB::raw('asset_type at'), 'a.asset_type_id', '=', 'at.asset_type_id')
-        ->where('a.asset_id', $id_asset)
+        ->where('a.serial_number', $serial_number)
         ->get();
 
         return $query;

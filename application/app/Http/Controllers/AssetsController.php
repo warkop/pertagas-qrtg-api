@@ -36,20 +36,36 @@ class AssetsController extends Controller
         return $res;
     }
 
-    public function detail($id_asset)
+    public function detail(Request $req)
     {
-        $assets = new Assets;
-        $res = $assets->getDetail($id_asset);
-        if ($res->isEmpty()) {
+        $validator = Validator::make($req->all(), [
+            'serial_number'         => 'required',
+        ]);
+
+        if ($validator->fails()) {
             $this->responseCode = 400;
-            $this->responseMessage = 'Asset tidak ditemukan';
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
         } else {
-            $this->responseCode = 200;
-            $this->responseData = $res;
+            $assets = new Assets;
+
+            $serial_number = $req->input('serial_number');
+
+            $res = $assets->getDetail($serial_number);
+            if ($res->isEmpty()) {
+                $this->responseCode = 400;
+                $this->responseMessage = 'Asset tidak ditemukan';
+            } else {
+                $this->responseCode = 200;
+                $this->responseData = $res;
+            }
+    
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
         }
 
-        $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
-        return response()->json($response, $this->responseCode);
     }
 
     public function store(Request $req)
