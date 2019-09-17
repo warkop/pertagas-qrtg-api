@@ -49,6 +49,7 @@ class EnergeekAuthMiddleware
         }
 
         if ($responseCode == 200) {
+            $request->attributes->add(['my_auth' => $auth]);
             return $next($request);
         } else {
             $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);

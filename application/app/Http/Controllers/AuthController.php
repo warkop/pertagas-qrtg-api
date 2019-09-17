@@ -62,6 +62,8 @@ class AuthController extends Controller
                     $responseCode = 200;
                     $responseData['access_token'] = $access_token;
                     $responseData['role'] = $m_user->role_id;
+                    $responseData['username'] = $m_user->username;
+                    $responseData['email'] = $m_user->email;
                     $responseData['id_user'] = $m_user->user_id;
                     $responseMessage = 'Anda berhasil login';
                 } else {

@@ -23,7 +23,7 @@ class AssetsController extends Controller
     {
         $res = new Assets;
 
-        $this->responseData = $res->all();
+        $this->responseData = $res->getAll();
         $this->responseCode = 200;
 
         $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
@@ -85,6 +85,7 @@ class AssetsController extends Controller
 
         $temp = Assets::where('serial_number',$serial_number)->get();
         if ($temp->isEmpty()) {
+            $user = $req->get('my_auth');
             $res = new Assets;
 
             $res->asset_type_id         = $id_type_asset;
@@ -98,7 +99,8 @@ class AssetsController extends Controller
             $res->manufacture_date      = $manufacture_date;
             $res->expiry_date           = $expiry_date;
             $res->height                = $height;
-            $res->width                = $width;
+            $res->width                 = $width;
+            $res->created_by            = $user->id_user;
 
             $saved = $res->save();
 
@@ -124,34 +126,27 @@ class AssetsController extends Controller
         return response()->json($response, $this->responseCode);
     }
 
-    public function delete(Request $req)
+    public function delete($id_asset)
     {
-        $responseCode = 403;
-        $responseStatus = '';
-        $responseMessage = '';
-        $responseData = [];
+        $id_asset = strip_tags($id_asset);
 
-        $id_asset = strip_tags($req->input('asset_id'));
-
-        $res = Assets::find($id_asset);
-
-        $destroy = $res->delete();
+        $destroy = Assets::destroy($id_asset);
 
         if ($destroy) {
-            $responseCode = 202;
-            $responseMessage = 'Asset berhasil dihapus!';
-            $responseData = $destroy;
+            $this->responseCode = 202;
+            $this->responseMessage = 'Asset berhasil dihapus!';
+            $this->responseData = $destroy;
 
-            $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         } else {
-            $responseCode = 500;
-            $responseMessage = 'Asset gagal dihapus!';
-            $responseData = $destroy;
+            $this->responseCode = 500;
+            $this->responseMessage = 'Asset gagal dihapus!';
+            $this->responseData = $destroy;
 
-            $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         }
 
-        return response()->json($response, $responseCode);
+        return response()->json($response, $this->responseCode);
     }
     
     public function deleteAll()
@@ -161,16 +156,15 @@ class AssetsController extends Controller
         $responseMessage = '';
         $responseData = [];
 
-        $res = Assets::all();
+        $res = Assets::whereNotNull('asset_id');
 
-        // foreach ($res as $key) {
-            $destroy = $res->forceDelete();
-        // }
+        $destroy = $res->forceDelete();
 
         if ($destroy) {
             $responseCode = 202;
             $responseMessage = 'Asset berhasil dihapus semua!';
             $responseData = $destroy;
+            $responseStatus = 'Accepted';
 
             $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
         } else {
@@ -183,6 +177,4 @@ class AssetsController extends Controller
 
         return response()->json($response, $responseCode);
     }
-
-    
 }

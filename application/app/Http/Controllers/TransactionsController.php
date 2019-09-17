@@ -100,6 +100,7 @@ class TransactionsController extends Controller
         $res_assets     = Assets::find($id_asset);
 
         if ($res_assets !== null) {
+            $user = $req->get('my_auth');
             $id_result     = $req->input('result_id');
             $created_by     = $req->input('created_by');
             $snapshot_url   =  $req->file('snapshot_url')->getClientOriginalName();
@@ -125,7 +126,7 @@ class TransactionsController extends Controller
                 'result_id' => $id_result,
                 'snapshot_url' => $snapshot_url,
                 'created_at' => date('Y-m-d H:i:s'),
-                'created_by' => $created_by,
+                'created_by' => $user->id_user,
             ];
 
             $saved = Transactions::create($arr_store);

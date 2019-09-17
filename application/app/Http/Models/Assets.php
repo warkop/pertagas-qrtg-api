@@ -59,4 +59,26 @@ class Assets extends Model
 
         return $query;
     }
+
+    public function getAll()
+    {
+        $query = DB::table('assets as a')
+        ->selectRaw('
+        asset_id,
+        asset_name,
+        at.asset_desc as asset_type_desc,
+        a.asset_desc as asset_desc,
+        gross_weight,
+        net_weight,
+        pics_url,
+        serial_number,
+        TO_CHAR(manufacture_date, \'dd/mm/yyyy\') as manufacture_date,
+        TO_CHAR(expiry_date, \'dd/mm/yyyy\') as expiry_date,
+        height,
+        width')
+        ->join('asset_type as at', 'a.asset_type_id', '=', 'at.asset_type_id')
+        ->get();
+
+        return $query;
+    }
 }
