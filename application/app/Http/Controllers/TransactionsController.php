@@ -53,9 +53,15 @@ class TransactionsController extends Controller
 
     public function store(Request $req)
     {
+        $id_result     = $req->input('result_id');
         $validator = Validator::make($req->all(), [
             'asset_id' => 'required',
-            'result_id' => 'required',
+            'result_id' => [
+                'required',
+                Rule::exists('results')->where(function ($query) use ($id_result) {
+                    $query->where('result_id',  $id_result);
+                })
+            ],
             'snapshot_url' => 'required|file|max:9000',
         ]);
 
@@ -72,7 +78,7 @@ class TransactionsController extends Controller
 
         if ($res_assets !== null) {
             $user = $req->get('my_auth');
-            $id_result     = $req->input('result_id');
+            
 
             
 

@@ -69,6 +69,12 @@ class Assets extends Model
         ->leftJoin('seq_scheme_group as ssg', 'a.seq_scheme_group_id', '=', 'ssg.seq_scheme_group_id')
         ->where('a.serial_number', $serial_number)
         ->whereNull('a.deleted_at')
+        ->whereNull('t.deleted_at')
+        ->whereNull('s.deleted_at')
+        ->whereNull('at.deleted_at')
+        ->whereNull('r.deleted_at')
+        ->whereNull('m.deleted_at')
+        ->whereNull('ssg.deleted_at')
         ->orderBy('transaction_id', 'desc')
         ->take(1)
         ->get();

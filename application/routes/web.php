@@ -68,7 +68,6 @@ $router->group(['prefix' => 'transactions', 'middleware' => 'eauth'], function (
     $router->post('/save', 'TransactionsController@store');
     $router->get('/current_status/{id_asset}', 'TransactionsController@currentStatus');
     $router->post('/generate_result', 'TransactionsController@generateResult');
-    $router->post('/processing', 'TransactionsController@processing');
 });
 
 $router->group(['prefix' => 'assets', 'middleware' => 'eauth'], function () use ($router) {
