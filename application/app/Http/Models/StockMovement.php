@@ -54,9 +54,19 @@ class StockMovement extends Model
     public static function jsonGrid($start, $length, $search = '', $count = false, $sort, $field)
     {
         $result = DB::table('stock_movement as sm')
-            ->select(['stock_movement_id', 'document_number', 's.station_name as station', 'ss.station_name as destination_station'])
+            ->select([
+                'stock_movement_id', 
+                'document_number', 
+                's.station_id', 
+                's.station_name as station', 
+                'ss.station_id as destination_id',
+                'ss.station_name as destination_station',
+                'rt.report_type_id',
+                'rt.report_name',
+            ])
             ->join('stations as s', 's.station_id', '=', 'sm.station_id')
             ->join('stations as ss', 'ss.station_id', '=', 'sm.destination_station_id')
+            ->join('report_type as rt', 'rt.report_type_id', '=', 'sm.report_type_id')
             ->whereNull('sm.deleted_at');
 
         if (!empty($search)) {
@@ -74,6 +84,26 @@ class StockMovement extends Model
             
             return $result->count();
         }
+    }
 
+    public function assetOfStockMovement($id_stock_movement='', $id_asset='')
+    {
+        $query = DB::table('detail_asset_stock as das')
+        ->select([
+            'detail_asset_stock_id',
+            'das.stock_movement_id',
+            'das.asset_id',
+            'sm.document_number',
+            'a.serial_number',
+            'at.asset_name',
+        ])
+        ->join('stock_movement as sm', 'sm.stock_movement_id', '=', 'das.stock_movement_id')
+        ->join('assets as a', 'a.asset_id', '=', 'das.asset_id')
+        ->join('asset_type as at', 'at.asset_type_id', '=', 'a.asset_type_id')
+        ->where('das.stock_movement_id', $id_stock_movement)
+        ->whereNull('das.deleted_at')
+        ->get();
+
+        return $query;
     }
 }

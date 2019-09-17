@@ -39,11 +39,12 @@ class StockMovementController extends Controller
             $start = $req->input('start');
             $perpage = $req->input('perpage');
             $search = $req->input('search');
+            $order = $req->input('order');
 
             $pattern = '/[^a-zA-Z0-9 !@#$%^&*\/\.\,\(\)-_:;?\+=]/u';
             $search = preg_replace($pattern, '', $search);
 
-            $sort = 'DESC';
+            $sort = $order??'desc';
             $field = 'sm.created_at';
 
             $total = $res->jsonGrid($start, $perpage, $search, true, $sort, $field);
@@ -58,6 +59,35 @@ class StockMovementController extends Controller
 
         $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         return response()->json($response, $this->responseCode);
+    }
+
+    public function listStockAsset(Request $req)
+    {
+        $id_stock_movement = $req->input('stock_movement_id');
+        $validator = Validator::make($req->all(), [
+            'stock_movement_id' => ['required',
+            Rule::exists('stock_movement')->where(function ($query) use ($id_stock_movement) {
+                $query->where('stock_movement_id',  $id_stock_movement);
+            })],
+        ]);
+
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        } else {
+            $detail_asset_stock = new StockMovement();
+
+            $res = $detail_asset_stock->assetOfStockMovement($id_stock_movement);
+
+            $this->responseCode = 200;
+            $this->responseData = $res;
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        }
     }
 
     public function viewAssets()

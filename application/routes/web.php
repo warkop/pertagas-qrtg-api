@@ -86,4 +86,5 @@ $router->group(['prefix' => 'stock_movement', 'middleware' => 'eauth'], function
     $router->get('/save', 'StockMovementController@store');
     $router->put('/save_asset', 'StockMovementController@storeAssets');
     $router->delete('/delete_all', 'StockMovementController@deleteAll');
+    $router->get('/list_stock_asset', 'StockMovementController@listStockAsset');
 });
