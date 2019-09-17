@@ -75,7 +75,7 @@ class Users extends Model implements AuthenticatableContract, AuthorizableContra
         return $result;
     }
 
-    public static function get_by_access_token($access_token = false)
+    public static function getByAccessToken($access_token = false)
     {
         if ($access_token == false) {
             return false;

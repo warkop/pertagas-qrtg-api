@@ -50,4 +50,30 @@ class StockMovement extends Model
 
         return $query;
     }
+
+    public static function jsonGrid($start, $length, $search = '', $count = false, $sort, $field)
+    {
+        $result = DB::table('stock_movement as sm')
+            ->select(['stock_movement_id', 'document_number', 's.station_name as station', 'ss.station_name as destination_station'])
+            ->join('stations as s', 's.station_id', '=', 'sm.station_id')
+            ->join('stations as ss', 'ss.station_id', '=', 'sm.destination_station_id')
+            ->whereNull('sm.deleted_at');
+
+        if (!empty($search)) {
+            $result = $result->where(function ($where) use ($search) {
+                $where->where('document_number', 'ILIKE', '%' . $search . '%')
+                    ->orWhere('s.station_name', 'ILIKE', '%' . $search . '%')
+                    ->orWhere('ss.station_name', 'ILIKE', '%' . $search . '%');
+            });
+        }
+
+        $result  = $result->offset($start)->limit($length)->orderBy($field, $sort)->get();
+        if ($count == false) {
+            return $result;
+        } else {
+            
+            return $result->count();
+        }
+
+    }
 }

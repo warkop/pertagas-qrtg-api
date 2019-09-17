@@ -31,4 +31,9 @@ class UsersController extends Controller
         $response = helpResponse($responseCode, $responseData, $responseMessage, $responseStatus);
         return response()->json($response, $responseCode);
     }
+
+    public function (Type $var = null)
+    {
+        # code...
+    }
 }

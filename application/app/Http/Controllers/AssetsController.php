@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Models\Assets;
+use App\Http\Models\Transactions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 
 class AssetsController extends Controller
@@ -70,12 +72,31 @@ class AssetsController extends Controller
 
     public function store(Request $req)
     {
+        $id_manufacturer        = $req->input('manufacturer_id');
+        $id_type_asset          = $req->input('asset_type_id');
+        $id_seq_scheme_group    = $req->input('seq_scheme_group_id');
         $validator = Validator::make($req->all(), [
-            'id_type_asset'         => 'required',
-            'id_manufacturer'       => 'required',
-            'id_seq_scheme_group'   => 'required',
+            'asset_type_id'         => [
+                'required',
+                Rule::exists('asset_type')->where(function ($query) use ($id_type_asset) {
+                    $query->where('asset_type_id',  $id_type_asset);
+                })
+            ],
+            'manufacturer_id'       => [
+                'required',
+                Rule::exists('manufacturer')->where(function ($query) use ($id_manufacturer) {
+                    $query->where('manufacturer_id',  $id_manufacturer);
+                })
+            ],
+            'seq_scheme_group_id'   => [
+                'required',
+                Rule::exists('seq_scheme_group')->where(function ($query) use ($id_seq_scheme_group) {
+                    $query->where('seq_scheme_group_id',  $id_seq_scheme_group);
+                })
+            ],
             'serial_number'         => 'required',
-            'expiry_date'           => 'required',
+            'manufacturer_date'     => 'date_format:d-m-Y',
+            'expiry_date'           => 'date_format:d-m-Y',
         ]);
 
         if ($validator->fails()) {
@@ -84,62 +105,80 @@ class AssetsController extends Controller
 
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
-        }
+        } else {
+            
+            
+            
+            $asset_desc             = $req->input('asset_desc');
+            $gross_weight           = $req->input('gross_weight');
+            $net_weight             = $req->input('net_weight');
+            $pics_url               = $req->input('pics_url');
+            $serial_number          = $req->input('serial_number');
+            $manufacture_date       = $req->input('manufacture_date');
+            $expiry_date            = $req->input('expiry_date');
+            $height                 = $req->input('height');
+            $width                  = $req->input('width');
+            $from_date              = $req->input('from_date');
+            $end_date               = $req->input('end_date');
+    
+            $temp = Assets::where('serial_number',$serial_number)->get();
 
-        $id_type_asset          = $req->input('id_type_asset');
-        $id_manufacturer        = $req->input('id_manufacturer');
-        $id_seq_scheme_group    = $req->input('id_seq_scheme_group');
-        $asset_desc             = $req->input('asset_desc');
-        $gross_weight           = $req->input('gross_weight');
-        $net_weight             = $req->input('net_weight');
-        $pics_url               = $req->input('pics_url');
-        $serial_number          = $req->input('serial_number');
-        $manufacture_date       = $req->input('manufacture_date');
-        $expiry_date            = $req->input('expiry_date');
-        $height                 = $req->input('height');
-        $width                  = $req->input('width');
+            if ($temp->isEmpty()) {
+                $user = $req->get('my_auth');
+                $res = new Assets;
+    
+                $res->asset_type_id         = $id_type_asset;
+                $res->manufacturer_id       = $id_manufacturer;
+                $res->seq_scheme_group_id   = $id_seq_scheme_group;
+                $res->asset_desc            = $asset_desc;
+                $res->gross_weight          = $gross_weight;
+                $res->net_weight            = $net_weight;
+                $res->pics_url              = $pics_url;
+                $res->serial_number         = $serial_number;
+                $res->manufacture_date      = $manufacture_date;
+                $res->expiry_date           = $expiry_date;
+                $res->height                = $height;
+                $res->width                 = $width;
+                $res->from_date             = date('Y-m-d',strtotime($from_date));
+                $res->end_date              = date('Y-m-d', strtotime($end_date));
+                $res->created_at            = date('Y-m-d H:i:s');
+                $res->created_by            = $user->id_user;
+    
+                $saved = $res->save();
+    
+                if (!$saved) {
+                    $this->responseCode = 502;
+                    $this->responseMessage = 'Data gagal disimpan!';
+    
+                    $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                } else {
+                    // var_dump($saved);
+                    $arr_store = [
+                        'asset_id' => $res->asset_id,
+                        'station_id' => 2,
+                        
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'created_by' => $user->id_user,
+                    ];
 
-        $temp = Assets::where('serial_number',$serial_number)->get();
-        if ($temp->isEmpty()) {
-            $user = $req->get('my_auth');
-            $res = new Assets;
+                    $saved = Transactions::create($arr_store);
 
-            $res->asset_type_id         = $id_type_asset;
-            $res->manufacturer_id       = $id_manufacturer;
-            $res->seq_scheme_group_id   = $id_seq_scheme_group;
-            $res->asset_desc            = $asset_desc;
-            $res->gross_weight          = $gross_weight;
-            $res->net_weight            = $net_weight;
-            $res->pics_url              = $pics_url;
-            $res->serial_number         = $serial_number;
-            $res->manufacture_date      = $manufacture_date;
-            $res->expiry_date           = $expiry_date;
-            $res->height                = $height;
-            $res->width                 = $width;
-            $res->created_by            = $user->id_user;
 
-            $saved = $res->save();
-
-            if (!$saved) {
-                $this->responseCode = 502;
-                $this->responseMessage = 'Data gagal disimpan!';
-
-                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                    $this->responseCode = 201;
+                    $this->responseMessage = 'Asset berhasil disimpan!';
+                    $this->responseData = $req->all();
+    
+                    $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                }
             } else {
-                $this->responseCode = 201;
-                $this->responseMessage = 'Asset berhasil disimpan!';
-                $this->responseData = $req->all();
-
+                $this->responseCode = 400;
+                $this->responseData = $req->input('serial_number');
+                $this->responseMessage = 'Serial Number sudah ada!';
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             }
-        } else {
-            $this->responseCode = 400;
-            $this->responseData = $req->input('serial_number');
-            $this->responseMessage = 'Serial Number sudah ada!';
-            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+    
+            return response()->json($response, $this->responseCode);
         }
-
-        return response()->json($response, $this->responseCode);
     }
 
     public function delete($id_asset)
