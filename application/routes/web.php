@@ -60,6 +60,7 @@ $router->group(['prefix' => 'seqschemegroup', 'middleware' => 'eauth'], function
 
 $router->group(['prefix' => 'users', 'middleware' => 'eauth'], function () use ($router) {
     $router->get('/', 'UsersController@index');
+    $router->patch('/change_password', 'UsersController@changePassword');
 });
 
 $router->group(['prefix' => 'transactions', 'middleware' => 'eauth'], function () use ($router) {
