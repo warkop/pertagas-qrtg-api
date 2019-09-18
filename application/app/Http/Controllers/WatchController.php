@@ -4,43 +4,42 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Http\Models\User;
-use App\Http\Models\Mahasiswa;
-use App\Http\Models\MahasiswaFoto;
+use App\Http\Models\Users;
+use App\Http\Models\Transactions;
+use App\Http\Models\Assets;
 
 class WatchController extends Controller
 {
-    public function
-    default($nama, Request $request)
+    public function default($nama, Request $request)
     {
-        $access_token    = helpEmpty($request->get("token"), 'null');
-        $id_file        = helpEmpty($request->get("un"), 'null');
-        $id_parent        = helpEmpty($request->get("prt"), 'null');
-        $category    = helpEmpty($request->get("ctg"), 'null');
-        $source        = helpEmpty($request->get("src"), 'null');
+        $access_token       = helpEmpty($request->get("token"), 'null');
+        $id_file            = helpEmpty($request->get("un"), 'null');
+        $id_parent          = helpEmpty($request->get("prt"), 'null');
+        $category           = helpEmpty($request->get("ctg"), 'null');
+        $source             = helpEmpty($request->get("src"), 'null');
 
         $image         = ['.jpg', '.jpeg', '.png'];
 
-        $file = myBasePath('/api/', '/');
+        $file = myBasePath();
 
-        $cek_user = User::get_by_access_token($access_token);
+        $cek_user = Users::getByAccessToken($access_token);
 
         if (!empty($access_token) && !empty($cek_user)) {
             $cek_id = '';
 
-            if ($category == 'mahasiswa') {
-                $cek_id = MahasiswaFoto::get_data($id_file, false, false);
-                $id_parent = ($id_parent == md5($cek_id->id_mahasiswa . encText('mahasiswa'))) ? $cek_id->id_mahasiswa : false;
+            if ($category == 'transactions') {
+                $cek_id = Transactions::find($id_file);
+                // $id_parent = ($id_parent == md5($cek_id->id_mahasiswa . encText('mahasiswa'))) ? $cek_id->id_mahasiswa : false;
 
-                if (!empty($source) && !empty($category)) {
-                    $file .= myStorage($category . '/' . $id_parent . '/' . $source);
+                if (!empty($source) && !empty($category) && !empty($cek_id)) {
+                    $file = storage_path('app/public/'.$category . '/' . $id_file . '/' . $source);
                 }
             }
 
             $file = protectPath($file);
 
             if (file_exists($file) && !is_dir($file)) {
-                $type    = 'image';
+                // $type    = 'image';
 
                 $ext = pathinfo($file, PATHINFO_EXTENSION);
                 $ext = strtolower($ext);

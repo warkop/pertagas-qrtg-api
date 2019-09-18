@@ -41,4 +41,31 @@ class Transactions extends Model
 
         return $result;
     }
+
+    public function listTransaction($id_asset)
+    {
+        $query = DB::table('transactions as t')
+        ->select(
+            't.transaction_id',
+            't.asset_id',
+            't.result_id',
+            't.predecessor_station_id',
+            'asset_name',
+            'at.asset_desc as asset_type_desc',
+            'a.asset_desc as asset_desc',
+            'station_name',
+            'result_name',
+            'result_desc',
+            'snapshot'
+        )
+        ->join('assets as a', 't.asset_id', '=', 'a.asset_id')
+        ->join('asset_type as a', 't.asset_id', '=', 'a.asset_id')
+        ->join('results as r', 't.result_id', '=', 'r.result_id')
+        ->join('stations as s', 't.station_id', '=', 's.station_id')
+        ->join('stations as ss', 't.predecessor_station_id', '=', 's.station_id')
+        ->where('t.asset_id', $id_asset)
+        ->get();
+
+        return $query;
+    }
 }

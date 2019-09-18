@@ -69,6 +69,7 @@ $router->group(['prefix' => 'transactions', 'middleware' => 'eauth:1'], function
     $router->post('/save', 'TransactionsController@store');
     $router->get('/current_status/{id_asset}', 'TransactionsController@currentStatus');
     $router->post('/generate_result', 'TransactionsController@generateResult');
+    $router->post('/list_transaction', 'TransactionsController@listTransaction');
 });
 
 $router->group(['prefix' => 'assets', 'middleware' => 'eauth'], function () use ($router) {
@@ -89,3 +90,5 @@ $router->group(['prefix' => 'stock_movement', 'middleware' => 'eauth:2&3&4&6'], 
     $router->delete('/delete_all', 'StockMovementController@deleteAll');
     $router->get('/list_stock_asset', 'StockMovementController@listStockAsset');
 });
+
+$router->get('watch/{nama}/', 'WatchController@default');

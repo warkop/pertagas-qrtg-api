@@ -56,7 +56,7 @@ class AssetsController extends Controller
             $serial_number = $req->input('serial_number');
 
             $res = $assets->getDetail($serial_number);
-            if ($res->isEmpty()) {
+            if (empty($res)) {
                 $this->responseCode = 400;
                 $this->responseMessage = 'Asset tidak ditemukan';
             } else {

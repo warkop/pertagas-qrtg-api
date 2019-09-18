@@ -57,8 +57,8 @@ class Assets extends Model
         a.end_date,
         group_name,
         group_desc,
-        s.station_name,
-        r.result_name,
+        COALESCE(s.station_name, \'\')as station_name,
+        COALESCE(r.result_name, \'\')as result_name,
         a.created_at,
         a.updated_at')
         ->leftJoin('transactions as t', 't.asset_id', '=', 'a.asset_id')
@@ -77,7 +77,7 @@ class Assets extends Model
         ->whereNull('ssg.deleted_at')
         ->orderBy('transaction_id', 'desc')
         ->take(1)
-        ->get();
+        ->first();
 
         return $query;
     }

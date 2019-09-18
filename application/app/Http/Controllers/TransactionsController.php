@@ -107,7 +107,7 @@ class TransactionsController extends Controller
             } else {
                 $snapshot = $req->file('snapshot_url')->getClientOriginalName();
                 if ($req->file('snapshot_url')->isValid()) {
-                    $destinationPath = storage_path('app/public').'/'.$saved->transaction_id;
+                    $destinationPath = storage_path('app/public').'/transactions/'.$saved->transaction_id;
                     $req->file('snapshot_url')->move($destinationPath, $snapshot);
 
                     $temp_trans = Transactions::find($saved->transaction_id);
@@ -230,8 +230,6 @@ class TransactionsController extends Controller
 
             return response()->json($response, $this->responseCode);
         }
-
-        
     }
 
     public function currentStatus($id_asset)
@@ -250,5 +248,32 @@ class TransactionsController extends Controller
         $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
 
         return response()->json($response, $this->responseCode);
+    }
+
+    public function listTransactionAsset(Request $req)
+    {
+        $id_asset = $req->input('asset_id');
+        $validator = Validator::make($req->all(), [
+            'asset_id' => [
+                'required',
+                Rule::exists('assets')->where(function ($query) use ($id_asset) {
+                    $query->where('asset_id',  $id_asset);
+                })
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        } else {
+            // Transactions::listTransaction();
+            $this->responseCode = 200;
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        }
     }
 }
