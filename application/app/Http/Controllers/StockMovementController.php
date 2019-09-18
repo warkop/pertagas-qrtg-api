@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Models\StockMovement;
 use App\Http\Models\DetailAssetStock;
 use App\Http\Models\Stations;
+use App\Http\Models\Document;
+use App\Http\Models\StationRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -59,6 +61,18 @@ class StockMovementController extends Controller
 
         $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         return response()->json($response, $this->responseCode);
+    }
+
+    public function generateDocumentNumber(Request $req)
+    {
+        $user = $req->get('my_auth');
+
+        $resource = new StockMovement;
+
+        $resource = $resource->getStationRole($user->role);
+
+        return $resource;
+
     }
 
     public function listStockAsset(Request $req)
@@ -128,25 +142,28 @@ class StockMovementController extends Controller
 
     public function store(Request $req)
     {
-        $temp_report_id = $req->input('report_type_id');
-        $temp_station_id = $req->input('station_id');
-        $temp_destination_id = $req->input('destination_id');
+        $id_report_type             = $req->input('report_type_id');
+        $id_station                 = $req->input('station_id');
+        $id_destination_station     = $req->input('destination_station_id');
 
         $validator = Validator::make($req->all(), [
             'report_type_id' => [
                 'required',
-                Rule::exists('report_type')->where(function ($query) use ($temp_report_id) {
-                    $query->where('report_type_id',  $temp_report_id);
+                Rule::exists('report_type')->where(function ($query) use ($id_report_type) {
+                    $query->where('report_type_id',  $id_report_type);
                 })
             ],
             'station_id' => [
                 'required',
-                Rule::exists('stations')->where(function ($query) use ($temp_station_id) {
-                    $query->where('station_id',  $temp_station_id);
+                Rule::exists('stations')->where(function ($query) use ($id_station) {
+                    $query->where('station_id',  $id_station);
                 })
             ],
-            'destination_id' => [
-                'required'
+            'destination_station_id' => [
+                'required',
+                Rule::exists('stations')->where(function ($query) use ($id_destination_station) {
+                    $query->where('station_id',  $id_destination_station);
+                })
             ],
             'start_date'    => 'date_format:d-m-Y',
             'end_date'      => 'date_format:d-m-Y',
@@ -159,46 +176,41 @@ class StockMovementController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-
             $user = $req->get('my_auth');
 
-            $id_report_type     = $req->input('report_type_id');
-            $id_station         = $req->input('station_id');
             $ref_doc_number     = $req->input('ref_doc_number');
-            $id_destination     = $req->input('destination_id');
             $start_date         = $req->input('start_date');
             $end_date           = $req->input('end_date');
 
-            $arr_store = [
-                'station_id' => $id_station,
-                'report_type_id' => $id_report_type,
-                'destination_station_id' => $id_destination,
-                'ref_doc_number' => $ref_doc_number,
-                'start_date' => date('Y-m-d', strtotime($start_date)),
-                'end_date' => date('Y-m-d', strtotime($end_date)),
-                'created_at' => date('Y-m-d H:i:s'),
-                'created_by' => $user->id_user,
+
+            $arr = [
+                'ref_doc_number'            => $ref_doc_number,
+                'report_type_id'            => $id_report_type,
+                'station_id'                => $id_station,
+                'destination_station_id'    => $id_destination_station,
+                'start_date'                => date('Y-m-d', strtotime($start_date)),
+                'end_date'                  => date('Y-m-d', strtotime($end_date)),
+                'created_at'                => date('Y-m-d H:i:s'),
+                'created_by'                => $user->id_user,
             ];
 
-            $saved = StockMovement::create($arr_store);
-
-
+            $saved = Document::create($arr);
 
             if (!$saved) {
-                $this->responseCode = 502;
-                $this->responseMessage = 'Data gagal disimpan!';
+                $this->responseCode     = 502;
+                $this->responseMessage  = 'Data gagal disimpan!';
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             } else {
                 $temp_station = Stations::find($id_station);
 
-                $stock_movement = StockMovement::find($saved->stock_movement_id);
-                $stock_movement->document_number = $temp_station->abbreviation.date('Ymd').$saved->stock_movement_id;
-                $stock_movement->save();
+                $resource = Document::find($saved->document_id);
+                $resource->document_number = $temp_station->abbreviation.date('Ymd').$saved->document_id;
+                $resource->save();
 
-                $this->responseCode = 201;
-                $this->responseMessage = 'Data berhasil disimpan!';
-                $this->responseData =  $stock_movement;
+                $this->responseCode         = 201;
+                $this->responseMessage      = 'Data berhasil disimpan!';
+                $this->responseData         = $resource;
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             }
@@ -206,16 +218,51 @@ class StockMovementController extends Controller
         }
     }
 
+    public function listReadyStation(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'report_type_id' => [
+                'required',
+                Rule::exists('report_type')->where(function ($query) use ($id_report_type) {
+                    $query->where('report_type_id',  $id_report_type);
+                })
+            ],
+            'station_id' => [
+                'required',
+                Rule::exists('stations')->where(function ($query) use ($id_station) {
+                    $query->where('station_id',  $id_station);
+                })
+            ],
+            'destination_station_id' => [
+                'required',
+                Rule::exists('stations')->where(function ($query) use ($id_destination_station) {
+                    $query->where('station_id',  $id_destination_station);
+                })
+            ],
+            'start_date'    => 'date_format:d-m-Y',
+            'end_date'      => 'date_format:d-m-Y',
+        ]);
+
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        } else {
+        }
+    }
+
     public function storeAssets(Request $req)
     {
-        $id_stock_movement = $req->input('stock_movement_id');
+        $id_document = $req->input('document_id');
         $temp_asset_id = $req->input('asset_id');
 
         $validator = Validator::make($req->all(), [
-            'stock_movement_id' => [
+            'document_id' => [
                 'required',
-                Rule::exists('stock_movement')->where(function ($query) use ($id_stock_movement) {
-                    $query->where('stock_movement_id',  $id_stock_movement);
+                Rule::exists('document')->where(function ($query) use ($id_document) {
+                    $query->where('document_id',  $id_document);
                 })
             ],
             
@@ -232,7 +279,7 @@ class StockMovementController extends Controller
             if (!$stock_movement->isEmpty()) {
                 $collection_asset_id = $req->input('asset_id');
                 $user = $req->get('my_auth');
-                DetailAssetStock::where('stock_movement_id', $id_stock_movement)->forceDelete();
+                StockMovement::where('stock_movement_id', $id_stock_movement)->forceDelete();
 
                 for ($i = 0; $i < count($collection_asset_id); $i++) {
                     $arr = [
@@ -242,7 +289,7 @@ class StockMovementController extends Controller
                         'created_by' => $user->id_user,
                     ];
 
-                    DetailAssetStock::create($arr);
+                    StockMovement::create($arr);
                 }
 
                 $this->responseCode = 201;

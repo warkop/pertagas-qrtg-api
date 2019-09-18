@@ -98,6 +98,7 @@ class AssetsController extends Controller
             'serial_number'         => 'required',
             'manufacturer_date'     => 'date_format:d-m-Y',
             'expiry_date'           => 'date_format:d-m-Y',
+            'pics_url'              => 'file',
         ]);
 
         if ($validator->fails()) {
@@ -107,9 +108,6 @@ class AssetsController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-            
-            
-            
             $asset_desc             = $req->input('asset_desc');
             $gross_weight           = $req->input('gross_weight');
             $net_weight             = $req->input('net_weight');
@@ -134,7 +132,6 @@ class AssetsController extends Controller
                 $res->asset_desc            = $asset_desc;
                 $res->gross_weight          = $gross_weight;
                 $res->net_weight            = $net_weight;
-                $res->pics_url              = $pics_url;
                 $res->serial_number         = $serial_number;
                 $res->manufacture_date      = $manufacture_date;
                 $res->expiry_date           = $expiry_date;
@@ -153,7 +150,18 @@ class AssetsController extends Controller
     
                     $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
                 } else {
-                    // var_dump($saved);
+                    $pics_url = $req->file('pics_url')->getClientOriginalName();
+                    if ($req->file('pics_url')->isValid()) {
+                        $destinationPath = storage_path('app/public') . '/assets/' . $res->asset_id;
+                        $req->file('pics_url')->move($destinationPath, $pics_url);
+
+                        $resource = Assets::find($res->asset_id);
+
+                        $resource->pics_url = $pics_url;
+                        $resource->save();
+                    }
+
+
                     $arr_store = [
                         'asset_id' => $res->asset_id,
                         'station_id' => 2,
@@ -163,7 +171,6 @@ class AssetsController extends Controller
                     ];
 
                     $saved = Transactions::create($arr_store);
-
 
                     $this->responseCode = 201;
                     $this->responseMessage = 'Asset berhasil disimpan!';

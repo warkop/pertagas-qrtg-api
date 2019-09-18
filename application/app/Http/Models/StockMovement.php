@@ -53,9 +53,9 @@ class StockMovement extends Model
 
     public static function jsonGrid($start, $length, $search = '', $count = false, $sort, $field)
     {
-        $result = DB::table('stock_movement as sm')
+        $result = DB::table('document as d')
             ->select([
-                'stock_movement_id', 
+                'document_id', 
                 'document_number', 
                 's.station_id', 
                 's.station_name as station', 
@@ -64,11 +64,10 @@ class StockMovement extends Model
                 'rt.report_type_id',
                 'rt.report_name',
             ])
-            ->join('stations as s', 's.station_id', '=', 'sm.station_id')
-            ->join('stations as ss', 'ss.station_id', '=', 'sm.destination_station_id')
-            ->join('report_type as rt', 'rt.report_type_id', '=', 'sm.report_type_id')
-            ->whereNull('sm.deleted_at');
-
+            ->join('stations as s', 's.station_id', '=', 'd.station_id')
+            ->join('stations as ss', 'ss.station_id', '=', 'd.destination_station_id')
+            ->join('report_type as rt', 'rt.report_type_id', '=', 'd.report_type_id')
+            ->whereNull('d.deleted_at');
         if (!empty($search)) {
             $result = $result->where(function ($where) use ($search) {
                 $where->where('document_number', 'ILIKE', '%' . $search . '%')
@@ -81,7 +80,6 @@ class StockMovement extends Model
         if ($count == false) {
             return $result;
         } else {
-            
             return $result->count();
         }
     }
@@ -131,6 +129,18 @@ class StockMovement extends Model
         ->whereNull('s.deleted_at')
         ->whereNull('rt.deleted_at')
         ->first();
+
+        return $query;
+    }
+    
+    public function getStationRole($id_role)
+    {
+        $query = DB::table('station_role as sr')
+        ->select('*')
+        ->join('roles as r', 'sr.role_id', '=', 'r.role_id')
+        ->join('stations as s', 'sr.station_id', '=', 's.station_id')
+        ->where('sr.role_id', $id_role)
+        ->get();
 
         return $query;
     }

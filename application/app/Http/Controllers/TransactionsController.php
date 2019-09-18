@@ -78,9 +78,6 @@ class TransactionsController extends Controller
 
         if ($res_assets !== null) {
             $user = $req->get('my_auth');
-            
-
-            
 
             $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('created_at', 'desc')->take(1)->first();
 
