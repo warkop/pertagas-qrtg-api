@@ -35,7 +35,7 @@ class Assets extends Model
         return $this->hasMany('App\Http\Models\AssetType', 'asset_type_id', 'asset_type_id');
     }
 
-    public function getDetail($serial_number)
+    public function getDetail($qr_code)
     {
         $query = DB::table(DB::raw('assets a'))
         ->selectRaw('
@@ -48,6 +48,7 @@ class Assets extends Model
         gross_weight,
         net_weight,
         pics_url,
+        qr_code,
         serial_number,
         TO_CHAR(manufacture_date, \'dd/mm/yyyy\') as manufacture_date,
         TO_CHAR(expiry_date, \'dd/mm/yyyy\') as expiry_date,
@@ -68,7 +69,7 @@ class Assets extends Model
         ->leftJoin('results as r', 't.result_id', '=', 'r.result_id')
         ->leftJoin('manufacturer as m', 'm.manufacturer_id', '=', 'a.manufacturer_id')
         ->leftJoin('seq_scheme_group as ssg', 'a.seq_scheme_group_id', '=', 'ssg.seq_scheme_group_id')
-        ->where('a.serial_number', $serial_number)
+        ->where('a.qr_code', $qr_code)
         ->whereNull('a.deleted_at')
         ->whereNull('t.deleted_at')
         ->whereNull('s.deleted_at')
@@ -94,6 +95,7 @@ class Assets extends Model
         gross_weight,
         net_weight,
         pics_url,
+        qr_code,
         serial_number,
         TO_CHAR(manufacture_date, \'dd/mm/yyyy\') as manufacture_date,
         TO_CHAR(expiry_date, \'dd/mm/yyyy\') as expiry_date,

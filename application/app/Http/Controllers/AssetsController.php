@@ -41,7 +41,7 @@ class AssetsController extends Controller
     public function detail(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'serial_number'         => 'required',
+            'qr_code'         => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -53,9 +53,9 @@ class AssetsController extends Controller
         } else {
             $assets = new Assets;
 
-            $serial_number = $req->input('serial_number');
+            $qr_code = $req->input('qr_code');
 
-            $res = $assets->getDetail($serial_number);
+            $res = $assets->getDetail($qr_code);
             if (empty($res)) {
                 $this->responseCode = 400;
                 $this->responseMessage = 'Asset tidak ditemukan';
@@ -94,6 +94,7 @@ class AssetsController extends Controller
                     $query->where('seq_scheme_group_id',  $id_seq_scheme_group);
                 })
             ],
+            'qr_code'               => 'required',
             'serial_number'         => 'required',
             'manufacturer_date'     => 'date_format:d-m-Y',
             'expiry_date'           => 'date_format:d-m-Y',
