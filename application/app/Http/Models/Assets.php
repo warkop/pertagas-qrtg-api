@@ -59,6 +59,7 @@ class Assets extends Model
         group_desc,
         COALESCE(s.station_name, \'\')as station_name,
         COALESCE(r.result_name, \'\')as result_name,
+        COALESCE(r.result_desc, \'\')as result_desc,
         a.created_at,
         a.updated_at')
         ->leftJoin('transactions as t', 't.asset_id', '=', 'a.asset_id')

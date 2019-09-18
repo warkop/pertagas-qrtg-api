@@ -237,7 +237,7 @@ class TransactionsController extends Controller
         $res_seq_scheme = new SeqScheme;
 
         $res_trans = $res_seq_scheme->checkPosition($id_asset);
-        if ($res_trans->isEmpty()) {
+        if (empty($res_trans)) {
             $this->responseCode = 400;
             $this->responseMessage = 'Data tidak ditemukan!';
         } else {
@@ -269,8 +269,10 @@ class TransactionsController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-            // Transactions::listTransaction();
+            $trans = new Transactions;
+            $res = $trans->listTransaction($id_asset);
             $this->responseCode = 200;
+            $this->responseData = $res;
 
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);

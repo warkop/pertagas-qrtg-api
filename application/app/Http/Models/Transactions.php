@@ -49,21 +49,20 @@ class Transactions extends Model
             't.transaction_id',
             't.asset_id',
             't.result_id',
-            't.predecessor_station_id',
             'asset_name',
             'at.asset_desc as asset_type_desc',
             'a.asset_desc as asset_desc',
             'station_name',
             'result_name',
             'result_desc',
-            'snapshot'
+            'snapshot_url'
         )
-        ->join('assets as a', 't.asset_id', '=', 'a.asset_id')
-        ->join('asset_type as a', 't.asset_id', '=', 'a.asset_id')
-        ->join('results as r', 't.result_id', '=', 'r.result_id')
-        ->join('stations as s', 't.station_id', '=', 's.station_id')
-        ->join('stations as ss', 't.predecessor_station_id', '=', 's.station_id')
+        ->leftJoin('assets as a', 't.asset_id', '=', 'a.asset_id')
+        ->leftJoin('asset_type as at', 'at.asset_type_id', '=', 'a.asset_type_id')
+        ->leftJoin('results as r', 't.result_id', '=', 'r.result_id')
+        ->leftJoin('stations as s', 't.station_id', '=', 's.station_id')
         ->where('t.asset_id', $id_asset)
+        ->orderBy('t.created_at', 'desc')
         ->get();
 
         return $query;

@@ -79,7 +79,7 @@ class SeqScheme extends Model
         ->where('a.asset_id', $id_asset)
         ->orderBy('transaction_id', 'desc')
         ->take(1)
-        ->get();
+        ->first();
 
         return $query;
     }

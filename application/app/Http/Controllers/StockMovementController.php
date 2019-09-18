@@ -90,9 +90,40 @@ class StockMovementController extends Controller
         }
     }
 
-    public function viewAssets()
+    public function show(Request $req)
     {
-        
+        $id_stock_movement = $req->input('stock_movement_id');
+
+        $validator = Validator::make($req->all(), [
+            'stock_movement_id' => [
+                'required',
+                Rule::exists('stock_movement')->where(function ($query) use ($id_stock_movement) {
+                    $query->where('stock_movement_id',  $id_stock_movement);
+                })
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        } else {
+            $stock_movement = new StockMovement;
+
+            $res = $stock_movement->getDetail($id_stock_movement);
+            if (empty($res)) {
+                $this->responseCode = 400;
+                $this->responseMessage = 'Stock Movement tidak ditemukan';
+            } else {
+                $this->responseCode = 200;
+                $this->responseData = $res;
+            }
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        }
     }
 
     public function store(Request $req)

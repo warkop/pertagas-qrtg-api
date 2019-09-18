@@ -106,4 +106,32 @@ class StockMovement extends Model
 
         return $query;
     }
+
+    public function getDetail($id_stock_movement)
+    {
+        $query = DB::table('stock_movement as sm')
+        ->selectRaw('
+            sm.stock_movement_id,
+            sm.report_type_id,
+            sm.station_id,
+            sm.destination_station_id,
+            document_number,
+            ref_doc_number,
+            s.station_name,
+            s.abbreviation,
+            rt.report_name,
+            rt.report_desc,
+            sm.start_date,
+            sm.end_date
+            ')
+        ->leftJoin('stations as s', 's.station_id', '=', 'sm.station_id')
+        ->leftJoin('report_type as rt', 'sm.report_type_id', '=', 'rt.report_type_id')
+        ->where('sm.stock_movement_id', $id_stock_movement)
+        ->whereNull('sm.deleted_at')
+        ->whereNull('s.deleted_at')
+        ->whereNull('rt.deleted_at')
+        ->first();
+
+        return $query;
+    }
 }
