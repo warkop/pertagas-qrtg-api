@@ -21,6 +21,17 @@ class SeqSchemeTableSeeder extends Seeder
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),
         ]);
+
+        DB::table('seq_scheme')->insert([
+            'station_id' => 2,
+            'predecessor_station_id' => null,
+            'result_id' => null,
+            'seq_scheme_group_id' => 1,
+            'scheme_name' => 'Unregistered New Cylinders',
+            'created_by' => 1,
+            'created_at' => date("Y-m-d H:i:s"),
+            'from_date' => date('Y-m-d H:i:s'),
+        ]);
         
         DB::table('seq_scheme')->insert([
             'station_id' => 2,
@@ -50,7 +61,7 @@ class SeqSchemeTableSeeder extends Seeder
             'predecessor_station_id' => 3,
             'result_id' => 3,
             'seq_scheme_group_id' => 1,
-            'scheme_name' => 'Cylinders type NV, R1, R2, R3, R4',
+            'scheme_name' => 'Cylinders type NV',
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),
@@ -61,7 +72,7 @@ class SeqSchemeTableSeeder extends Seeder
             'predecessor_station_id' => 3,
             'result_id' => 4,
             'seq_scheme_group_id' => 1,
-            'scheme_name' => 'Cylinders type NV, R1, R2, R3, R4',
+            'scheme_name' => 'Cylinders type R1',
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),
@@ -72,7 +83,7 @@ class SeqSchemeTableSeeder extends Seeder
             'predecessor_station_id' => 3,
             'result_id' => 5,
             'seq_scheme_group_id' => 1,
-            'scheme_name' => 'Cylinders type NV, R1, R2, R3, R4',
+            'scheme_name' => 'Cylinders type R2',
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),
@@ -83,7 +94,7 @@ class SeqSchemeTableSeeder extends Seeder
             'predecessor_station_id' => 3,
             'result_id' => 6,
             'seq_scheme_group_id' => 1,
-            'scheme_name' => 'Cylinders type NV, R1, R2, R3, R4',
+            'scheme_name' => 'Cylinders type R3',
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),
@@ -94,7 +105,7 @@ class SeqSchemeTableSeeder extends Seeder
             'predecessor_station_id' => 3,
             'result_id' => 7,
             'seq_scheme_group_id' => 1,
-            'scheme_name' => 'Cylinders type NV, R1, R2, R3, R4',
+            'scheme_name' => 'Cylinders type R4',
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),
@@ -124,17 +135,62 @@ class SeqSchemeTableSeeder extends Seeder
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),
         ]);
-
+        //start repair order
         DB::table('seq_scheme')->insert([
-            'station_id' => 5,
-            'predecessor_station_id' => 4,
+            'station_id' => 6,
+            'predecessor_station_id' => 5,
             'result_id' => 8,
             'seq_scheme_group_id' => 1,
-            'scheme_name' => 'Repair Order Cylinders R1, R2, R3, R4, R5',
+            'scheme_name' => 'Repair Order Cylinders R5',
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),
         ]);
+
+        DB::table('seq_scheme')->insert([
+            'station_id' => 6,
+            'predecessor_station_id' => 5,
+            'result_id' => 4,
+            'seq_scheme_group_id' => 1,
+            'scheme_name' => 'Repair Order Cylinders R1',
+            'created_by' => 1,
+            'created_at' => date("Y-m-d H:i:s"),
+            'from_date' => date('Y-m-d H:i:s'),
+        ]);
+
+        DB::table('seq_scheme')->insert([
+            'station_id' => 6,
+            'predecessor_station_id' => 5,
+            'result_id' => 5,
+            'seq_scheme_group_id' => 1,
+            'scheme_name' => 'Repair Order Cylinders R2',
+            'created_by' => 1,
+            'created_at' => date("Y-m-d H:i:s"),
+            'from_date' => date('Y-m-d H:i:s'),
+        ]);
+
+        DB::table('seq_scheme')->insert([
+            'station_id' => 6,
+            'predecessor_station_id' => 5,
+            'result_id' => 6,
+            'seq_scheme_group_id' => 1,
+            'scheme_name' => 'Repair Order Cylinders R3',
+            'created_by' => 1,
+            'created_at' => date("Y-m-d H:i:s"),
+            'from_date' => date('Y-m-d H:i:s'),
+        ]);
+
+        DB::table('seq_scheme')->insert([
+            'station_id' => 6,
+            'predecessor_station_id' => 5,
+            'result_id' => 7,
+            'seq_scheme_group_id' => 1,
+            'scheme_name' => 'Repair Order Cylinders R4',
+            'created_by' => 1,
+            'created_at' => date("Y-m-d H:i:s"),
+            'from_date' => date('Y-m-d H:i:s'),
+        ]);
+        //end repair order
 
         DB::table('seq_scheme')->insert([
             'station_id' => 6,
