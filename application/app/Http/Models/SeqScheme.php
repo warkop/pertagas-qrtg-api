@@ -68,7 +68,7 @@ class SeqScheme extends Model
             'a.from_date',
             'a.end_date',
             'a.height',
-            'a.width',
+            'a.width'
         )
         ->leftJoin('transactions as t', 't.asset_id', '=', 'a.asset_id')
         ->leftJoin('stations as s', 's.station_id', '=', 't.station_id')
