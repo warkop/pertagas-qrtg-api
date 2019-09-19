@@ -21,7 +21,7 @@ class ReportTypeTableSeeder extends Seeder
             'from_date' => date('Y-m-d H:i:s'),
         ]);
 
-        DB::table('seq_scheme')->insert([
+        DB::table('report_type')->insert([
             'report_name' => 'Good Receive',
             'report_desc' => null,
             'can_be_ref' => 1,
