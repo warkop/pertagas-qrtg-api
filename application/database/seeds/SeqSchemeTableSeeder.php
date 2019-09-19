@@ -193,8 +193,8 @@ class SeqSchemeTableSeeder extends Seeder
         //end repair order
 
         DB::table('seq_scheme')->insert([
-            'station_id' => 6,
-            'predecessor_station_id' => 5,
+            'station_id' => 2,
+            'predecessor_station_id' => 6,
             'result_id' => 11,
             'seq_scheme_group_id' => 1,
             'scheme_name' => 'Repair Order Rejected(Unfixable) Cylinders Type W',
@@ -204,8 +204,8 @@ class SeqSchemeTableSeeder extends Seeder
         ]);
 
         DB::table('seq_scheme')->insert([
-            'station_id' => 6,
-            'predecessor_station_id' => 5,
+            'station_id' => 3,
+            'predecessor_station_id' => 6,
             'result_id' => 10,
             'seq_scheme_group_id' => 1,
             'scheme_name' => 'Repaired Cylinders (Type X)',
