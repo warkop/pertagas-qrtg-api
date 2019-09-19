@@ -82,7 +82,7 @@ class Users extends Model implements AuthenticatableContract, AuthorizableContra
         }
 
         $result = DB::table(DB::raw('"users" usr'))
-            ->select(DB::raw('user_id AS id_user, username AS username, email,role_id AS role, token AS access_token'))
+            ->select(DB::raw('user_id AS id_user, username AS username, email,role_id AS role, token AS access_token, station_id as id_station'))
             ->whereNull(DB::raw("usr.deleted_at"));
 
         $result = $result->where('token', $access_token);

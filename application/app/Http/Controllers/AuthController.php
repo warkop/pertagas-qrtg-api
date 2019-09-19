@@ -65,6 +65,8 @@ class AuthController extends Controller
                     $responseData['username'] = $m_user->username;
                     $responseData['email'] = $m_user->email;
                     $responseData['id_user'] = $m_user->user_id;
+                    $responseData['id_station'] = $m_user->station_id;
+                    $responseData['gcid'] = $m_user->user_gcid;
                     $responseMessage = 'Anda berhasil login';
                 } else {
                     $responseCode = 401;

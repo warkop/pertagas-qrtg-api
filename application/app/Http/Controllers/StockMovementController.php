@@ -6,6 +6,7 @@ use App\Http\Models\StockMovement;
 use App\Http\Models\DetailAssetStock;
 use App\Http\Models\Stations;
 use App\Http\Models\Document;
+use App\Http\Models\ReportType;
 use App\Http\Models\StationRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -17,11 +18,6 @@ class StockMovementController extends Controller
     private $responseStatus = '';
     private $responseMessage = '';
     private $responseData = [];
-
-    public function __construct()
-    {
-        //
-    }
 
     public function index(Request $req)
     {
@@ -47,7 +43,7 @@ class StockMovementController extends Controller
             $search = preg_replace($pattern, '', $search);
 
             $sort = $order??'desc';
-            $field = 'sm.created_at';
+            $field = 'd.created_at';
 
             $total = $res->jsonGrid($start, $perpage, $search, true, $sort, $field);
             $resource = $res->jsonGrid($start, $perpage, $search, false, $sort, $field);
@@ -66,22 +62,80 @@ class StockMovementController extends Controller
     public function generateDocumentNumber(Request $req)
     {
         $user = $req->get('my_auth');
+        $temp = Document::where('document_status', 1)->where('station_id', $user->id_station)->first();
+        if (empty($temp)) {
+            
+            $resource = new StockMovement;
 
-        $resource = new StockMovement;
+            $resource = $resource->getStationRole($user->id_user);
 
-        $resource = $resource->getStationRole($user->role);
+            if (!empty($resource)) {
+                $document = new Document;
+                $saved = $document->save();
+                $id_document = $document->document_id;
 
-        return $resource;
+                if (!$saved) {
+                    $this->responseCode = 500;
+                    $this->responseMessage = 'Gagal membuat document number, silahkan ulangi kembali!';
 
+                    $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                    return response()->json($response, $this->responseCode);
+                } else {
+                    $number  = $resource->abbreviation;
+
+                    $angka = 20 - (strlen($number) + strlen($id_document));
+
+                    for ($i = 0; $i < $angka; $i++) {
+                        $number .= "0";
+                    }
+
+                    $report_type = ReportType::where('has_designation', 1)->first();
+
+                    $number .= $id_document;
+
+                    $document->report_type_id   = $report_type->report_type_id;
+                    $document->document_number  = $number;
+                    $document->station_id       = $user->id_station;
+                    $document->document_status  = 1;
+                    $document->created_at       = date('Y-m-d H:i:s');
+                    $document->created_by       = $user->id_user;
+                    $document->save();
+
+                    $this->responseCode = 200;
+                    $this->responseData = [
+                        'document_number' => $number,
+                        'document_id' => $document->document_id,
+                    ];
+
+                    $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                    return response()->json($response, $this->responseCode);
+                }
+            } else {
+                $this->responseCode = 500;
+                $this->responseMessage = 'Users tidak ditemukan! Silahkan login kembali!';
+
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                return response()->json($response, $this->responseCode);
+            }
+
+            return response()->json($response, $this->responseCode);
+        } else {
+            $this->responseCode = 500;
+            $this->responseMessage = 'Anda tidak diizinkan menambah dokumen selama masih ada draft!';
+            $this->responseData['document_id'] = $temp->document_id;
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        }
     }
 
     public function listStockAsset(Request $req)
     {
-        $id_stock_movement = $req->input('stock_movement_id');
+        $id_document = $req->input('document_id');
         $validator = Validator::make($req->all(), [
-            'stock_movement_id' => ['required',
-            Rule::exists('stock_movement')->where(function ($query) use ($id_stock_movement) {
-                $query->where('stock_movement_id',  $id_stock_movement);
+            'document_id' => ['required',
+            Rule::exists('document')->where(function ($query) use ($id_document) {
+                $query->where('document_id',  $id_document);
             })],
         ]);
 
@@ -94,7 +148,7 @@ class StockMovementController extends Controller
         } else {
             $detail_asset_stock = new StockMovement();
 
-            $res = $detail_asset_stock->assetOfStockMovement($id_stock_movement);
+            $res = $detail_asset_stock->assetOfStockMovement($id_document);
 
             $this->responseCode = 200;
             $this->responseData = $res;
@@ -106,13 +160,13 @@ class StockMovementController extends Controller
 
     public function show(Request $req)
     {
-        $id_stock_movement = $req->input('stock_movement_id');
+        $id_document = $req->input('document_id');
 
         $validator = Validator::make($req->all(), [
-            'stock_movement_id' => [
+            'document_id' => [
                 'required',
-                Rule::exists('stock_movement')->where(function ($query) use ($id_stock_movement) {
-                    $query->where('stock_movement_id',  $id_stock_movement);
+                Rule::exists('document')->where(function ($query) use ($id_document) {
+                    $query->where('document_id',  $id_document);
                 })
             ],
         ]);
@@ -124,12 +178,12 @@ class StockMovementController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-            $stock_movement = new StockMovement;
+            $document = new StockMovement;
 
-            $res = $stock_movement->getDetail($id_stock_movement);
+            $res = $document->getDetail($id_document);
             if (empty($res)) {
                 $this->responseCode = 400;
-                $this->responseMessage = 'Stock Movement tidak ditemukan';
+                $this->responseMessage = 'Document tidak ditemukan';
             } else {
                 $this->responseCode = 200;
                 $this->responseData = $res;
@@ -142,24 +196,10 @@ class StockMovementController extends Controller
 
     public function store(Request $req)
     {
-        $id_report_type             = $req->input('report_type_id');
-        $id_station                 = $req->input('station_id');
-        $id_destination_station     = $req->input('destination_station_id');
+        $id_destination_station     = $req->input('station_id');
 
         $validator = Validator::make($req->all(), [
-            'report_type_id' => [
-                'required',
-                Rule::exists('report_type')->where(function ($query) use ($id_report_type) {
-                    $query->where('report_type_id',  $id_report_type);
-                })
-            ],
             'station_id' => [
-                'required',
-                Rule::exists('stations')->where(function ($query) use ($id_station) {
-                    $query->where('station_id',  $id_station);
-                })
-            ],
-            'destination_station_id' => [
                 'required',
                 Rule::exists('stations')->where(function ($query) use ($id_destination_station) {
                     $query->where('station_id',  $id_destination_station);
@@ -178,23 +218,19 @@ class StockMovementController extends Controller
         } else {
             $user = $req->get('my_auth');
 
-            $ref_doc_number     = $req->input('ref_doc_number');
+            $id_document         = $req->input('document_id');
             $start_date         = $req->input('start_date');
             $end_date           = $req->input('end_date');
 
+            $res = Document::find($id_document);
 
-            $arr = [
-                'ref_doc_number'            => $ref_doc_number,
-                'report_type_id'            => $id_report_type,
-                'station_id'                => $id_station,
-                'destination_station_id'    => $id_destination_station,
-                'start_date'                => date('Y-m-d', strtotime($start_date)),
-                'end_date'                  => date('Y-m-d', strtotime($end_date)),
-                'created_at'                => date('Y-m-d H:i:s'),
-                'created_by'                => $user->id_user,
-            ];
+            $res->destination_station_id    = $id_destination_station;
+            $res->start_date                = date('Y-m-d', strtotime($start_date));
+            $res->end_date                  = date('Y-m-d', strtotime($end_date));
+            $res->updated_at                = date('Y-m-d H:i:s');
+            $res->updated_by                = $user->id_user;
 
-            $saved = Document::create($arr);
+            $saved = $res->save();
 
             if (!$saved) {
                 $this->responseCode     = 502;
@@ -202,15 +238,9 @@ class StockMovementController extends Controller
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             } else {
-                $temp_station = Stations::find($id_station);
-
-                $resource = Document::find($saved->document_id);
-                $resource->document_number = $temp_station->abbreviation.date('Ymd').$saved->document_id;
-                $resource->save();
-
                 $this->responseCode         = 201;
                 $this->responseMessage      = 'Data berhasil disimpan!';
-                $this->responseData         = $resource;
+                $this->responseData         = $saved;
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             }
@@ -218,25 +248,14 @@ class StockMovementController extends Controller
         }
     }
 
-    public function listReadyStation(Request $req)
+    public function listDestinationStation(Request $req)
     {
+        $id_document = $req->input('document_id');
         $validator = Validator::make($req->all(), [
-            'report_type_id' => [
+            'document_id' => [
                 'required',
-                Rule::exists('report_type')->where(function ($query) use ($id_report_type) {
-                    $query->where('report_type_id',  $id_report_type);
-                })
-            ],
-            'station_id' => [
-                'required',
-                Rule::exists('stations')->where(function ($query) use ($id_station) {
-                    $query->where('station_id',  $id_station);
-                })
-            ],
-            'destination_station_id' => [
-                'required',
-                Rule::exists('stations')->where(function ($query) use ($id_destination_station) {
-                    $query->where('station_id',  $id_destination_station);
+                Rule::exists('document')->where(function ($query) use ($id_document) {
+                    $query->where('document_id',  $id_document);
                 })
             ],
             'start_date'    => 'date_format:d-m-Y',
@@ -253,10 +272,9 @@ class StockMovementController extends Controller
         }
     }
 
-    public function storeAssets(Request $req)
+    public function accept(Request $req)
     {
-        $id_document = $req->input('document_id');
-        $temp_asset_id = $req->input('asset_id');
+        $id_document     = $req->input('document_id');
 
         $validator = Validator::make($req->all(), [
             'document_id' => [
@@ -265,7 +283,6 @@ class StockMovementController extends Controller
                     $query->where('document_id',  $id_document);
                 })
             ],
-            
         ]);
 
         if ($validator->fails()) {
@@ -275,25 +292,94 @@ class StockMovementController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-            $stock_movement = StockMovement::where('stock_movement_id', $id_stock_movement)->get();
+            $user = $req->get('my_auth');
+            $id_document         = $req->input('document_id');
+            $res = Document::find($id_document);
+
+            $res->document_status = 2;
+            $res->save();
+
+            $report_type = ReportType::where('can_be_ref', 1)->first();
+
+            $arr = [
+                'ref_doc_number'            => $res->document_number,
+                'report_type_id'            => $report_type->report_type_id,
+                'station_id'                => $res->station_id,
+                'document_status'           => 3,
+                'start_date'                => date('Y-m-d', strtotime($res->start_date)),
+                'end_date'                  => date('Y-m-d', strtotime($res->end_date)),
+                'created_at'                => date('Y-m-d H:i:s'),
+                'created_by'                => $user->id_user,
+            ];
+
+            $saved = Document::create($arr);
+
+            $stock_movement = StockMovement::where('document_id')->get();
+
+            foreach ($stock_movement as $key) {
+                
+            }
+
+            if (!$saved) {
+                $this->responseCode     = 502;
+                $this->responseMessage  = 'Data gagal disimpan!';
+
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            } else {
+                $this->responseCode         = 201;
+                $this->responseMessage      = 'Data berhasil disimpan!';
+                $this->responseData         = $saved;
+
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            }
+            return response()->json($response, $this->responseCode);
+        }
+    }
+
+    public function storeAssets(Request $req)
+    {
+        $id_document = $req->input('document_id');
+        $id_asset = $req->input('asset_id');
+
+        $validator = Validator::make($req->all(), [
+            'document_id' => [
+                'required',
+                Rule::exists('document')->where(function ($query) use ($id_document) {
+                    $query->where('document_id',  $id_document);
+                })
+            ],
+            'asset_id' => [
+                'required',
+                Rule::exists('assets')->where(function ($query) use ($id_asset) {
+                    $query->where('asset_id',  $id_asset);
+                })
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        } else {
+            $stock_movement = Document::where('document_id', $id_document)->get();
             if (!$stock_movement->isEmpty()) {
-                $collection_asset_id = $req->input('asset_id');
                 $user = $req->get('my_auth');
-                StockMovement::where('stock_movement_id', $id_stock_movement)->forceDelete();
+                StockMovement::where('document_id', $id_document)->forceDelete();
 
-                for ($i = 0; $i < count($collection_asset_id); $i++) {
-                    $arr = [
-                        'stock_movement_id' => $id_stock_movement,
-                        'asset_id' => $collection_asset_id[$i],
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'created_by' => $user->id_user,
-                    ];
+                $arr = [
+                    'document_id'   => $id_document,
+                    'asset_id'      => $id_asset,
+                    'created_at'    => date('Y-m-d H:i:s'),
+                    'created_by'    => $user->id_user,
+                ];
 
-                    StockMovement::create($arr);
-                }
+                StockMovement::create($arr);
 
                 $this->responseCode = 201;
                 $this->responseMessage = 'Data berhasil disimpan!';
+                $this->responseData = $arr;
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
 
                 return response()->json($response, $this->responseCode);
@@ -307,46 +393,94 @@ class StockMovementController extends Controller
         }
     }
 
-    public function delete($id_stock_movement)
+    public function deleteAsset(Request $req)
     {
-        $id_stock_movement = strip_tags($id_stock_movement);
-        $destroy = StockMovement::destroy($id_stock_movement);
+        $id_stock_movement    = $req->input('stock_movement_id');
 
-        if ($destroy) {
-            $this->responseCode = 202;
-            $this->responseMessage = 'Stock Movement berhasil dihapus!';
-            $this->responseData = $destroy;
+        $validator = Validator::make($req->all(), [
+            'stock_movement_id' => [
+                'required',
+                Rule::exists('stock_movement')->where(function ($query) use ($id_stock_movement) {
+                    $query->where('stock_movement_id',  $id_stock_movement);
+                })
+            ],
+        ]);
 
-            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
-        } else {
+        if ($validator->fails()) {
             $this->responseCode = 500;
-            $this->responseMessage = 'Stock Movement gagal dihapus! Data mungkin sudah dihapus atau tidak ditemukan';
-            $this->responseData = $destroy;
+            $this->responseMessage = $validator->errors();
 
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
-        }
+            return response()->json($response, $this->responseCode);
+        } else {
+            $resource = StockMovement::find($id_stock_movement);
+            $resource->forceDelete();
 
-        return response()->json($response, $this->responseCode);
+            $this->responseCode = 202;
+            $this->responseMessage = 'Berhasil dihapus!';
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        }
+    }
+
+    public function delete(Request $req)
+    {
+        $id_document = $req->input('document_id');
+        $validator = Validator::make($req->all(), [
+            'document_id' => [
+                'required',
+                Rule::exists('document')->where(function ($query) use ($id_document) {
+                    $query->where('document_id',  $id_document);
+                })
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            $this->responseCode = 500;
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        } else {
+            $destroy = Document::destroy($id_document);
+
+            if ($destroy) {
+                $this->responseCode = 202;
+                $this->responseMessage = 'Document berhasil dihapus!';
+                $this->responseData = $destroy;
+
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            } else {
+                $this->responseCode = 500;
+                $this->responseMessage = 'Document gagal dihapus! Data mungkin sudah dihapus atau tidak ditemukan';
+                $this->responseData = $destroy;
+
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            }
+
+            return response()->json($response, $this->responseCode);
+        }
     }
 
     public function deleteAll()
     {
-        $assets = StockMovement::whereNotNull('stock_movement_id');
-        $destroy = $assets->forceDelete();
+        $stock_movement = StockMovement::whereNotNull('stock_movement_id');
+        $destroy2 = $stock_movement->forceDelete();
 
-        $detail_asset_stock = DetailAssetStock::whereNotNull('detail_asset_stock_id');
-        $destroy2 = $detail_asset_stock->forceDelete();
+        $document = Document::whereNotNull('document_id');
+        $destroy = $document->forceDelete();
 
-        if ($destroy && $destroy2) {
+        if ($destroy) {
             $this->responseCode = 202;
-            $this->responseMessage = 'Stock Movement berhasil dihapus semua!';
+            $this->responseMessage = 'Document berhasil dihapus semua!';
             $this->responseData = $destroy;
             $this->responseStatus = 'Accepted';
 
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         } else {
             $this->responseCode = 500;
-            $this->responseMessage = 'Stock Movement gagal dihapus! Data kemungkinan sudah dihapus semua!';
+            $this->responseMessage = 'Document gagal dihapus! Data kemungkinan sudah dihapus semua!';
             $this->responseData = $destroy;
 
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);

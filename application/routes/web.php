@@ -73,7 +73,7 @@ $router->group(['prefix' => 'transactions', 'middleware' => 'eauth:1'], function
 });
 
 $router->group(['prefix' => 'assets', 'middleware' => 'eauth'], function () use ($router) {
-    $router->get('/', 'AssetsController@index');
+    $router->post('/', 'AssetsController@index');
     $router->post('/save', 'AssetsController@store');
     $router->get('/detail', 'AssetsController@detail');
     $router->delete('/delete/{asset_id}', 'AssetsController@delete');
@@ -81,15 +81,16 @@ $router->group(['prefix' => 'assets', 'middleware' => 'eauth'], function () use 
     $router->get('/test_detail[/{asset_id}]', 'AssetsController@testDetail');
 });
 
-$router->group(['prefix' => 'stock_movement', 'middleware' => 'eauth'], function () use ($router) {
+$router->group(['prefix' => 'stock_movement', 'middleware' => 'eauth:2&3&4&7'], function () use ($router) {
     $router->post('/', 'StockMovementController@index');
     $router->put('/save', 'StockMovementController@store');
-    $router->delete('/delete/{stock_movement_id}', 'StockMovementController@delete');
-    $router->get('/save', 'StockMovementController@store');
+    $router->delete('/delete', 'StockMovementController@delete');
+    $router->delete('/delete_asset/{stock_movement}', 'StockMovementController@deleteAsset');
     $router->put('/save_asset', 'StockMovementController@storeAssets');
     $router->delete('/delete_all', 'StockMovementController@deleteAll');
     $router->get('/list_stock_asset', 'StockMovementController@listStockAsset');
     $router->get('/detail', 'StockMovementController@show');
+    $router->post('/accept', 'StockMovementController@accept');
     
     $router->get('/generate_document_number', 'StockMovementController@generateDocumentNumber');
 });

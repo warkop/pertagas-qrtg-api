@@ -63,10 +63,18 @@ class StockMovement extends Model
                 'ss.station_name as destination_station',
                 'rt.report_type_id',
                 'rt.report_name',
+                'd.document_status',
+                DB::raw('(CASE 
+                    WHEN d.document_status = 1 AND rt.can_be_ref IS NULL THEN \'Draft\'
+                    WHEN d.document_status = 2 AND rt.can_be_ref IS NULL THEN \'Approve\'
+                    WHEN d.document_status = 3 AND rt.can_be_ref IS NOT NULL THEN \'GR Draft\'
+                    WHEN d.document_status = 4 AND rt.can_be_ref IS NOT NULL THEN \'GR Approve\'
+                END) as status
+                '),
             ])
-            ->join('stations as s', 's.station_id', '=', 'd.station_id')
-            ->join('stations as ss', 'ss.station_id', '=', 'd.destination_station_id')
-            ->join('report_type as rt', 'rt.report_type_id', '=', 'd.report_type_id')
+            ->leftJoin('stations as s', 's.station_id', '=', 'd.station_id')
+            ->leftJoin('stations as ss', 'ss.station_id', '=', 'd.destination_station_id')
+            ->leftJoin('report_type as rt', 'rt.report_type_id', '=', 'd.report_type_id')
             ->whereNull('d.deleted_at');
         if (!empty($search)) {
             $result = $result->where(function ($where) use ($search) {
@@ -84,48 +92,47 @@ class StockMovement extends Model
         }
     }
 
-    public function assetOfStockMovement($id_stock_movement='', $id_asset='')
+    public function assetOfStockMovement($id_document='', $id_asset='')
     {
-        $query = DB::table('detail_asset_stock as das')
+        $query = DB::table('stock_movement as sm')
         ->select([
-            'detail_asset_stock_id',
-            'das.stock_movement_id',
-            'das.asset_id',
-            'sm.document_number',
+            'd.document_id',
+            'sm.asset_id',
+            'd.document_number',
             'a.serial_number',
             'at.asset_name',
         ])
-        ->join('stock_movement as sm', 'sm.stock_movement_id', '=', 'das.stock_movement_id')
-        ->join('assets as a', 'a.asset_id', '=', 'das.asset_id')
+        ->join('document as d', 'd.document_id', '=', 'sm.document_id')
+        ->join('assets as a', 'a.asset_id', '=', 'sm.asset_id')
         ->join('asset_type as at', 'at.asset_type_id', '=', 'a.asset_type_id')
-        ->where('das.stock_movement_id', $id_stock_movement)
-        ->whereNull('das.deleted_at')
+        ->where('sm.document_id', $id_document)
+        ->whereNull('sm.deleted_at')
         ->get();
 
         return $query;
     }
 
-    public function getDetail($id_stock_movement)
+    public function getDetail($id_document)
     {
-        $query = DB::table('stock_movement as sm')
+        $query = DB::table('document as d')
         ->selectRaw('
-            sm.stock_movement_id,
-            sm.report_type_id,
-            sm.station_id,
-            sm.destination_station_id,
+            d.document_id,
+            d.report_type_id,
+            d.station_id,
+            d.destination_station_id,
             document_number,
             ref_doc_number,
             s.station_name,
             s.abbreviation,
             rt.report_name,
             rt.report_desc,
-            sm.start_date,
-            sm.end_date
+            d.start_date,
+            d.end_date
             ')
-        ->leftJoin('stations as s', 's.station_id', '=', 'sm.station_id')
-        ->leftJoin('report_type as rt', 'sm.report_type_id', '=', 'rt.report_type_id')
-        ->where('sm.stock_movement_id', $id_stock_movement)
-        ->whereNull('sm.deleted_at')
+        ->leftJoin('stations as s', 's.station_id', '=', 'd.station_id')
+        ->leftJoin('report_type as rt', 'd.report_type_id', '=', 'rt.report_type_id')
+        ->where('d.document_id', $id_document)
+        ->whereNull('d.deleted_at')
         ->whereNull('s.deleted_at')
         ->whereNull('rt.deleted_at')
         ->first();
@@ -133,14 +140,17 @@ class StockMovement extends Model
         return $query;
     }
     
-    public function getStationRole($id_role)
+    public function getStationRole($id_user)
     {
-        $query = DB::table('station_role as sr')
-        ->select('*')
-        ->join('roles as r', 'sr.role_id', '=', 'r.role_id')
-        ->join('stations as s', 'sr.station_id', '=', 's.station_id')
-        ->where('sr.role_id', $id_role)
-        ->get();
+        $query = DB::table('users as u')
+        ->select('user_id',
+        'role_id',
+        'username',
+        'station_name',
+        'abbreviation')
+        ->join('stations as s', 'u.station_id', '=', 's.station_id')
+        ->where('u.user_id', $id_user)
+        ->first();
 
         return $query;
     }

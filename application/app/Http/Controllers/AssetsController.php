@@ -22,12 +22,41 @@ class AssetsController extends Controller
         //
     }
 
-    public function index()
+    public function index(Request $req)
     {
-        $res = new Assets;
+        $rules['start'] = 'required|integer|min:0';
+        $rules['perpage'] = 'required|integer|min:1';
 
-        $this->responseData = $res->getAll();
-        $this->responseCode = 200;
+        $validator = Validator::make($req->all(), $rules);
+
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseStatus = 'Missing Param';
+            $this->responseMessage = 'Silahkan isi form dengan benar terlebih dahulu';
+            $this->responseData = $validator->errors();
+        } else {
+            $res = new Assets();
+
+            $start = $req->input('start');
+            $perpage = $req->input('perpage');
+            $search = $req->input('search');
+            $order = $req->input('order');
+
+            $pattern = '/[^a-zA-Z0-9 !@#$%^&*\/\.\,\(\)-_:;?\+=]/u';
+            $search = preg_replace($pattern, '', $search);
+
+            $sort = $order ?? 'desc';
+            $field = 'a.created_at';
+
+            $total = $res->jsonGrid($start, $perpage, $search, true, $sort, $field);
+            $resource = $res->jsonGrid($start, $perpage, $search, false, $sort, $field);
+
+            $this->responseCode = 200;
+            $this->responseData = $resource;
+
+            $pagination = ['row' => count($resource), 'rowStart' => ((count($resource) > 0) ? ($start + 1) : 0), 'rowEnd' => ($start + count($resource))];
+            $this->responseData['meta'] = ['start' => $start, 'perpage' => $perpage, 'search' => $search, 'total' => $total, 'pagination' => $pagination];
+        }
 
         $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         return response()->json($response, $this->responseCode);
@@ -53,7 +82,6 @@ class AssetsController extends Controller
             return response()->json($response, $this->responseCode);
         } else {
             $assets = new Assets;
-            // $user = $req->get('my_auth');
             $qr_code = $req->input('qr_code');
 
             $res = $assets->getDetail($qr_code);
