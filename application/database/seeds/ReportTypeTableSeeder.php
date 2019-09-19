@@ -11,7 +11,7 @@ class ReportTypeTableSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('seq_scheme')->insert([
+        DB::table('report_type')->insert([
             'report_name' => 'Good Issue',
             'report_desc' => null,
             'can_be_ref' => null,
