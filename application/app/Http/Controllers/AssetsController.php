@@ -15,6 +15,7 @@ class AssetsController extends Controller
     private $responseStatus = '';
     private $responseMessage = '';
     private $responseData = [];
+    private $responseNote = null;
 
     public function __construct()
     {
@@ -52,7 +53,7 @@ class AssetsController extends Controller
             return response()->json($response, $this->responseCode);
         } else {
             $assets = new Assets;
-
+            // $user = $req->get('my_auth');
             $qr_code = $req->input('qr_code');
 
             $res = $assets->getDetail($qr_code);
@@ -62,9 +63,12 @@ class AssetsController extends Controller
             } else {
                 $this->responseCode = 200;
                 $this->responseData = $res;
+                $this->responseNote['pics_url'] = [
+                    'url' => '{base_url}/watch/{pics_url}?token={access_token}&un={asset_id}&ctg=assets&src={pics_url}'
+                ];
             }
     
-            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus, $this->responseNote);
             return response()->json($response, $this->responseCode);
         }
 
@@ -112,6 +116,7 @@ class AssetsController extends Controller
             $gross_weight           = $req->input('gross_weight');
             $net_weight             = $req->input('net_weight');
             $pics_url               = $req->input('pics_url');
+            $qr_code                = $req->input('qr_code');
             $serial_number          = $req->input('serial_number');
             $manufacture_date       = $req->input('manufacture_date');
             $expiry_date            = $req->input('expiry_date');
@@ -132,6 +137,7 @@ class AssetsController extends Controller
                 $res->asset_desc            = $asset_desc;
                 $res->gross_weight          = $gross_weight;
                 $res->net_weight            = $net_weight;
+                $res->qr_code               = $qr_code;
                 $res->serial_number         = $serial_number;
                 $res->manufacture_date      = $manufacture_date;
                 $res->expiry_date           = $expiry_date;
@@ -165,7 +171,6 @@ class AssetsController extends Controller
                     $arr_store = [
                         'asset_id' => $res->asset_id,
                         'station_id' => 2,
-                        
                         'created_at' => date('Y-m-d H:i:s'),
                         'created_by' => $user->id_user,
                     ];

@@ -74,7 +74,7 @@ $router->group(['prefix' => 'transactions', 'middleware' => 'eauth:1'], function
 
 $router->group(['prefix' => 'assets', 'middleware' => 'eauth'], function () use ($router) {
     $router->get('/', 'AssetsController@index');
-    $router->put('/save', 'AssetsController@store');
+    $router->post('/save', 'AssetsController@store');
     $router->get('/detail', 'AssetsController@detail');
     $router->delete('/delete/{asset_id}', 'AssetsController@delete');
     $router->delete('/delete_all', 'AssetsController@deleteAll');
