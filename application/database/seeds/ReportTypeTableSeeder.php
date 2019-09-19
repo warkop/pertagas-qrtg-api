@@ -15,7 +15,7 @@ class ReportTypeTableSeeder extends Seeder
             'report_name' => 'Good Issue',
             'report_desc' => null,
             'can_be_ref' => null,
-            'has_designation' => null,
+            'has_designation' => 1,
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),
@@ -24,7 +24,7 @@ class ReportTypeTableSeeder extends Seeder
         DB::table('seq_scheme')->insert([
             'report_name' => 'Good Receive',
             'report_desc' => null,
-            'can_be_ref' => null,
+            'can_be_ref' => 1,
             'has_designation' => null,
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
