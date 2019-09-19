@@ -19,5 +19,6 @@ class DatabaseSeeder extends Seeder
         $this->call('SeqSchemeGroupTableSeeder');
         $this->call('SeqSchemeTableSeeder');
         $this->call('StationsTableSeeder');
+        $this->call('ReportTypeTableSeeder');
     }
 }
