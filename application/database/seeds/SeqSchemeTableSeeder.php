@@ -44,17 +44,6 @@ class SeqSchemeTableSeeder extends Seeder
             'from_date' => date('Y-m-d H:i:s'),
         ]);
 
-        DB::table('seq_scheme')->insert([
-            'station_id' => 4,
-            'predecessor_station_id' => 3,
-            'result_id' => 2,
-            'seq_scheme_group_id' => 1,
-            'scheme_name' => 'Filling Plant',
-            'created_by' => 1,
-            'created_at' => date("Y-m-d H:i:s"),
-            'from_date' => date('Y-m-d H:i:s'),
-        ]);
-        
         //start-----if Cylinders Type NV, R1, R2, R3, R4
         DB::table('seq_scheme')->insert([
             'station_id' => 5,
@@ -215,22 +204,11 @@ class SeqSchemeTableSeeder extends Seeder
         ]);
 
         DB::table('seq_scheme')->insert([
-            'station_id' => 5,
-            'predecessor_station_id' => 4,
+            'station_id' => null,
+            'predecessor_station_id' => 5,
             'result_id' => 3,
             'seq_scheme_group_id' => 1,
             'scheme_name' => 'Cylinders type NV will be inspected and double checked',
-            'created_by' => 1,
-            'created_at' => date("Y-m-d H:i:s"),
-            'from_date' => date('Y-m-d H:i:s'),
-        ]);
-
-        DB::table('seq_scheme')->insert([
-            'station_id' => 5,
-            'predecessor_station_id' => 4,
-            'result_id' => 12,
-            'seq_scheme_group_id' => 1,
-            'scheme_name' => 'Delivery Orders',
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
             'from_date' => date('Y-m-d H:i:s'),
