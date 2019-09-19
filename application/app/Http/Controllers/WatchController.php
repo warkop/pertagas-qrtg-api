@@ -34,6 +34,13 @@ class WatchController extends Controller
                 if (!empty($source) && !empty($category) && !empty($cek_id)) {
                     $file = storage_path('app/public/'.$category . '/' . $id_file . '/' . $source);
                 }
+            } else if ($category == 'assets') {
+                $cek_id = Assets::find($id_file);
+                // $id_parent = ($id_parent == md5($cek_id->id_mahasiswa . encText('mahasiswa'))) ? $cek_id->id_mahasiswa : false;
+
+                if (!empty($source) && !empty($category) && !empty($cek_id)) {
+                    $file = storage_path('app/public/' . $category . '/' . $id_file . '/' . $source);
+                }
             }
 
             $file = protectPath($file);
