@@ -90,9 +90,12 @@ $router->group(['prefix' => 'stock_movement', 'middleware' => 'eauth:2&3&4&7'], 
     $router->delete('/delete_all', 'StockMovementController@deleteAll');
     $router->get('/list_stock_asset', 'StockMovementController@listStockAsset');
     $router->get('/detail', 'StockMovementController@show');
-    $router->post('/accept', 'StockMovementController@accept');
+    $router->patch('/accept', 'StockMovementController@accept');
+    $router->patch('/approve_gr', 'StockMovementController@approveGR');
+    $router->get('/get_ready_assets', 'StockMovementController@getReadyAssets');
     
     $router->get('/generate_document_number', 'StockMovementController@generateDocumentNumber');
 });
 
 $router->get('watch/{nama}/', 'WatchController@default');
+

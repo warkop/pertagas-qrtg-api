@@ -129,6 +129,58 @@ class StockMovementController extends Controller
         }
     }
 
+    public function getReadyAssets(Request $req)
+    {
+        $user = $req->get('my_auth');
+
+        $rules['start'] = 'required|integer|min:0';
+        $rules['perpage'] = 'required|integer|min:1';
+
+        $validator = Validator::make($req->all(), $rules);
+
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseStatus = 'Missing Param';
+            $this->responseMessage = 'Silahkan isi form dengan benar terlebih dahulu';
+            $this->responseData = $validator->errors();
+        } else {
+            $res_seq_scheme  = new SeqScheme;
+            $res_asset = new Assets;
+            $res_transaction = Transactions::where('assets');
+
+            // foreach ($res_transaction as )
+            // $obj = $res_seq_scheme->where('predecessor_station_id', $res_transaction->station_id)->where('result_id', $id_result)->first();
+            // if ($obj !== null) {
+            //     return $obj->station_id;
+            // }
+
+            // $start = $req->input('start');
+            // $perpage = $req->input('perpage');
+            // $search = $req->input('search');
+            // $order = $req->input('order');
+
+            // $pattern = '/[^a-zA-Z0-9 !@#$%^&*\/\.\,\(\)-_:;?\+=]/u';
+            // $search = preg_replace($pattern, '', $search);
+
+            // $sort = $order ?? 'desc';
+            // $field = 't.created_at';
+
+            // $res = new StockMovement;
+            // $total = $res->getAssets($start, $perpage, $search, true, $sort, $field, $user->id_station);
+            // $resource = $res->getAssets($start, $perpage, $search, false, $sort, $field, $user->id_station);
+            // $this->responseCode = 200;
+            // $this->responseData = $resource;
+
+            // $pagination = ['row' => count($resource), 'rowStart' => ((count($resource) > 0) ? ($start + 1) : 0), 'rowEnd' => ($start + count($resource))];
+            // $this->responseData['meta'] = ['start' => $start, 'perpage' => $perpage, 'search' => $search, 'total' => $total, 'pagination' => $pagination];
+        }
+        
+        
+
+        $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+        return response()->json($response, $this->responseCode);
+    }
+
     public function listStockAsset(Request $req)
     {
         $id_document = $req->input('document_id');
@@ -281,6 +333,7 @@ class StockMovementController extends Controller
                 'required',
                 Rule::exists('document')->where(function ($query) use ($id_document) {
                     $query->where('document_id',  $id_document);
+                    $query->where('document_status',  1);
                 })
             ],
         ]);
@@ -304,7 +357,7 @@ class StockMovementController extends Controller
             $arr = [
                 'ref_doc_number'            => $res->document_number,
                 'report_type_id'            => $report_type->report_type_id,
-                'station_id'                => $res->station_id,
+                'station_id'                => $res->destination_station_id,
                 'document_status'           => 3,
                 'start_date'                => date('Y-m-d', strtotime($res->start_date)),
                 'end_date'                  => date('Y-m-d', strtotime($res->end_date)),
@@ -314,10 +367,16 @@ class StockMovementController extends Controller
 
             $saved = Document::create($arr);
 
-            $stock_movement = StockMovement::where('document_id')->get();
-
+            $stock_movement = StockMovement::where('document_id', $id_document)->get();
             foreach ($stock_movement as $key) {
-                
+                $gg = [
+                    'document_id'    => $saved->document_id,
+                    'asset_id'       => $key->asset_id,
+                    'created_at'     => date('Y-m-d H:i:s'),
+                    'created_by'     => $user->id_user,
+                ];
+
+                StockMovement::create($gg);
             }
 
             if (!$saved) {
@@ -329,6 +388,51 @@ class StockMovementController extends Controller
                 $this->responseCode         = 201;
                 $this->responseMessage      = 'Data berhasil disimpan!';
                 $this->responseData         = $saved;
+
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            }
+            return response()->json($response, $this->responseCode);
+        }
+    }
+
+    public function approveGR(Request $req)
+    {
+        $id_document     = $req->input('document_id');
+        $user = $req->get('my_auth');
+        $validator = Validator::make($req->all(), [
+            'document_id' => [
+                'required',
+                Rule::exists('document')->where(function ($query) use ($id_document) {
+                    $query->where('document_id',  $id_document);
+                    $query->where('document_status',  3);
+                })
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        } else {
+            $res = Document::find($id_document);
+
+            $res->document_status = 4;
+            $res->updated_at = date('Y-m-d H:i:s');
+            $res->updated_by = $user->id_user;
+
+            $saved = $res->save();
+
+            if (!$saved) {
+                $this->responseCode     = 502;
+                $this->responseMessage  = 'Data gagal disimpan!';
+
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            } else {
+                $this->responseCode         = 201;
+                $this->responseMessage      = 'Data berhasil disimpan!';
+                $this->responseData         = $res;
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             }

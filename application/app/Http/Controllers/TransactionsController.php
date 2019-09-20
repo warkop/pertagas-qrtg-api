@@ -80,7 +80,6 @@ class TransactionsController extends Controller
             $user = $req->get('my_auth');
 
             $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('created_at', 'desc')->take(1)->first();
-            // var_dump($res_trans->asset_id);
             if (empty($res_trans)) {
                 $station = 2;
             } else {
@@ -138,49 +137,6 @@ class TransactionsController extends Controller
         if ($obj !== null) {
             return $obj->station_id;
         }
-
-        // if ($res_transaction->station_id == 2) {
-        //     $obj = $res_seq_scheme->where('predecessor_station_id', $res_transaction->station_id)->where('result_id', $id_result)->first();
-        //     if ($obj !== null) {
-        //         return $obj->station_id;
-        //     }
-        // }
-
-        // if ($res_transaction->station_id == 3) {
-        //     $obj = $res_seq_scheme->where('predecessor_station_id', $res_transaction->station_id)->where('result_id', $id_result)->first();
-        //     if ($obj !== null) {
-        //         return $obj->station_id;
-        //     }
-        // }
-
-        
-        // if ($res_transaction->station_id == 4) {
-        //     $obj = $res_seq_scheme->where('predecessor_station_id', $res_transaction->station_id)->where('result_id', $id_result)->first();
-        //     if ($obj !== null) {
-        //         return $obj->station_id;
-        //     }
-        // }
-
-        // if ($res_transaction->station_id == 5) {
-        //     $obj = $res_seq_scheme->where('predecessor_station_id', $res_transaction->station_id)->where('result_id', $id_result)->first();
-        //     if ($obj !== null) {
-        //         return $obj->station_id;
-        //     }
-        // }
-
-        // if ($res_transaction->station_id == 6) {
-        //     $obj = $res_seq_scheme->where('predecessor_station_id', $res_transaction->station_id)->where('result_id', $id_result)->first();
-        //     if ($obj !== null) {
-        //         return $obj->station_id;
-        //     }
-        // }
-
-        // if ($res_transaction->station_id == 7) {
-        //     $obj = $res_seq_scheme->where('predecessor_station_id', $res_transaction->station_id)->where('result_id', $id_result)->first();
-        //     if ($obj !== null) {
-        //         return $obj->station_id;
-        //     }
-        // }
     }
 
     public function generateResult(Request $req)

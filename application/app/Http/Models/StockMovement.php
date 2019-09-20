@@ -56,7 +56,8 @@ class StockMovement extends Model
         $result = DB::table('document as d')
             ->select([
                 'document_id', 
-                'document_number', 
+                'document_number',
+                'ref_doc_number', 
                 's.station_id', 
                 's.station_name as station', 
                 'ss.station_id as destination_id',
@@ -153,5 +154,32 @@ class StockMovement extends Model
         ->first();
 
         return $query;
+    }
+
+    public function getAssets($start, $length, $search = '', $count = false, $sort, $field, $id_station)
+    {
+        $result = DB::table('transactions as t')
+        ->select('*')
+        ->join('assets as a', 't.asset_id', '=', 'a.asset_id')
+        ->join('asset_type as at', 'at.asset_type_id', '=', 'a.asset_type_id')
+        ->where('t.station_id', $id_station)
+        ->whereNull('t.deleted_at')
+        ->whereNull('a.deleted_at')
+        ->get();
+
+        if (!empty($search)) {
+            $result = $result->where(function ($where) use ($search) {
+                $where->where('serial_number', 'ILIKE', '%' . $search . '%')
+                    ->orWhere('qr_code', 'ILIKE', '%' . $search . '%')
+                    ->orWhere('at.asset_name', 'ILIKE', '%' . $search . '%');
+            });
+        }
+
+        $result  = $result->offset($start)->limit($length)->orderBy($field, $sort);
+        if ($count == false) {
+            return $result->get();
+        } else {
+            return $result->count();
+        }
     }
 }
