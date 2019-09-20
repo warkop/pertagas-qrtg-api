@@ -63,7 +63,7 @@ $router->group(['prefix' => 'users', 'middleware' => 'eauth'], function () use (
     $router->patch('/change_password', 'UsersController@changePassword');
 });
 
-$router->group(['prefix' => 'transactions', 'middleware' => 'eauth:1'], function () use ($router) {
+$router->group(['prefix' => 'transactions', 'middleware' => 'eauth'], function () use ($router) {
     $router->get('/', 'TransactionsController@index');
     $router->put('/create', 'TransactionsController@createTransaction');
     $router->post('/save', 'TransactionsController@store');
@@ -81,7 +81,7 @@ $router->group(['prefix' => 'assets', 'middleware' => 'eauth'], function () use 
     $router->get('/test_detail[/{asset_id}]', 'AssetsController@testDetail');
 });
 
-$router->group(['prefix' => 'stock_movement', 'middleware' => 'eauth:2&3&4&7'], function () use ($router) {
+$router->group(['prefix' => 'stock_movement', 'middleware' => 'eauth'], function () use ($router) {
     $router->post('/', 'StockMovementController@index');
     $router->put('/save', 'StockMovementController@store');
     $router->delete('/delete', 'StockMovementController@delete');
