@@ -167,8 +167,8 @@ class AssetsController extends Controller
                 $res->net_weight            = $net_weight;
                 $res->qr_code               = $qr_code;
                 $res->serial_number         = $serial_number;
-                $res->manufacture_date      = $manufacture_date;
-                $res->expiry_date           = $expiry_date;
+                $res->manufacture_date      = date('Y-m-d', strtotime($manufacture_date));
+                $res->expiry_date           = date('Y-m-d', strtotime($expiry_date));
                 $res->height                = $height;
                 $res->width                 = $width;
                 $res->from_date             = date('Y-m-d',strtotime($from_date));
