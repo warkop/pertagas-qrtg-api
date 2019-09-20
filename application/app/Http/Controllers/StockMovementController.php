@@ -252,8 +252,16 @@ class StockMovementController extends Controller
     public function store(Request $req)
     {
         $id_destination_station     = $req->input('station_id');
+        $id_document         = $req->input('document_id');
 
         $validator = Validator::make($req->all(), [
+            'document_id' => [
+                'required',
+                'numeric',
+                Rule::exists('document')->where(function ($query) use ($id_document) {
+                    $query->where('document_id',  $id_document);
+                })
+            ],
             'station_id' => [
                 'required',
                 'numeric',
@@ -274,7 +282,7 @@ class StockMovementController extends Controller
         } else {
             $user = $req->get('my_auth');
 
-            $id_document         = $req->input('document_id');
+            
             $start_date         = $req->input('start_date');
             $end_date           = $req->input('end_date');
 
