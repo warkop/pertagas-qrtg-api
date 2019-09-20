@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Models\StockMovement;
-use App\Http\Models\DetailAssetStock;
-use App\Http\Models\Stations;
 use App\Http\Models\Document;
 use App\Http\Models\ReportType;
-use App\Http\Models\StationRole;
+use App\Http\Models\Assets;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -18,6 +16,7 @@ class StockMovementController extends Controller
     private $responseStatus = '';
     private $responseMessage = '';
     private $responseData = [];
+    private $responseNote = null;
 
     public function index(Request $req)
     {
@@ -51,8 +50,8 @@ class StockMovementController extends Controller
             $this->responseCode = 200;
             $this->responseData = $resource;
 
-            $pagination = ['row' => count($resource), 'rowStart' => ((count($resource) > 0) ? ($start + 1) : 0), 'rowEnd' => ($start + count($resource))];
-            $this->responseData['meta'] = ['start' => $start, 'perpage' => $perpage, 'search' => $search, 'total' => $total, 'pagination' => $pagination];
+            // $pagination = ['row' => count($resource), 'rowStart' => ((count($resource) > 0) ? ($start + 1) : 0), 'rowEnd' => ($start + count($resource))];
+            // $this->responseData['meta'] = ['start' => $start, 'perpage' => $perpage, 'search' => $search, 'total' => $total, 'pagination' => $pagination];
         }
 
         $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
@@ -133,52 +132,41 @@ class StockMovementController extends Controller
     {
         $user = $req->get('my_auth');
 
-        $rules['start'] = 'required|integer|min:0';
-        $rules['perpage'] = 'required|integer|min:1';
-
-        $validator = Validator::make($req->all(), $rules);
+        $validator = Validator::make($req->all(), [
+            'qr_code'         => 'required',
+        ]);
 
         if ($validator->fails()) {
             $this->responseCode = 400;
-            $this->responseStatus = 'Missing Param';
-            $this->responseMessage = 'Silahkan isi form dengan benar terlebih dahulu';
-            $this->responseData = $validator->errors();
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
         } else {
-            $res_seq_scheme  = new SeqScheme;
-            $res_asset = new Assets;
-            $res_transaction = Transactions::where('assets');
+            $assets = new Assets;
+            $qr_code = $req->input('qr_code');
 
-            // foreach ($res_transaction as )
-            // $obj = $res_seq_scheme->where('predecessor_station_id', $res_transaction->station_id)->where('result_id', $id_result)->first();
-            // if ($obj !== null) {
-            //     return $obj->station_id;
-            // }
+            $res = $assets->getDetail($qr_code);
+            if (empty($res)) {
+                $this->responseCode = 400;
+                $this->responseMessage = 'Asset tidak ditemukan';
+            } else {
+                if ($res->station_id == $user->id_station && ($res->result_id == 4 || $res->result_id == 5 || $res->result_id == 6 || $res->result_id == 7 || $res->result_id == 8)) {
+                    $this->responseCode = 200;
+                    $this->responseData = $res;
+                    $this->responseNote['pics_url'] = [
+                        'url' => '{base_url}/watch/{pics_url}?token={access_token}&un={asset_id}&ctg=assets&src={pics_url}'
+                    ];
+                } else {
+                    $this->responseCode = 500;
+                    // $this->responseData = $res;
+                    $this->responseMessage = 'Station harus dari shipping plant';
+                }
+            }
 
-            // $start = $req->input('start');
-            // $perpage = $req->input('perpage');
-            // $search = $req->input('search');
-            // $order = $req->input('order');
-
-            // $pattern = '/[^a-zA-Z0-9 !@#$%^&*\/\.\,\(\)-_:;?\+=]/u';
-            // $search = preg_replace($pattern, '', $search);
-
-            // $sort = $order ?? 'desc';
-            // $field = 't.created_at';
-
-            // $res = new StockMovement;
-            // $total = $res->getAssets($start, $perpage, $search, true, $sort, $field, $user->id_station);
-            // $resource = $res->getAssets($start, $perpage, $search, false, $sort, $field, $user->id_station);
-            // $this->responseCode = 200;
-            // $this->responseData = $resource;
-
-            // $pagination = ['row' => count($resource), 'rowStart' => ((count($resource) > 0) ? ($start + 1) : 0), 'rowEnd' => ($start + count($resource))];
-            // $this->responseData['meta'] = ['start' => $start, 'perpage' => $perpage, 'search' => $search, 'total' => $total, 'pagination' => $pagination];
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus, $this->responseNote);
+            return response()->json($response, $this->responseCode);
         }
-        
-        
-
-        $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
-        return response()->json($response, $this->responseCode);
     }
 
     public function listStockAsset(Request $req)
@@ -323,8 +311,6 @@ class StockMovementController extends Controller
                     $query->where('document_id',  $id_document);
                 })
             ],
-            'start_date'    => 'date_format:d-m-Y',
-            'end_date'      => 'date_format:d-m-Y',
         ]);
 
         if ($validator->fails()) {
@@ -334,7 +320,7 @@ class StockMovementController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-
+            
         }
     }
 
@@ -487,8 +473,6 @@ class StockMovementController extends Controller
             $stock_movement = Document::where('document_id', $id_document)->get();
             if (!$stock_movement->isEmpty()) {
                 $user = $req->get('my_auth');
-                // StockMovement::where('document_id', $id_document)->forceDelete();
-
                 $arr = [
                     'document_id'   => $id_document,
                     'asset_id'      => $id_asset,

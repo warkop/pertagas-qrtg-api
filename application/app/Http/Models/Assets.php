@@ -35,7 +35,7 @@ class Assets extends Model
         return $this->hasMany('App\Http\Models\AssetType', 'asset_type_id', 'asset_type_id');
     }
 
-    public function getDetail($qr_code)
+    public function getDetail($qr_code, $id_station='')
     {
         $query = DB::table(DB::raw('assets a'))
         ->selectRaw('
@@ -78,10 +78,13 @@ class Assets extends Model
         ->whereNull('m.deleted_at')
         ->whereNull('ssg.deleted_at')
         ->orderBy('transaction_id', 'desc')
-        ->take(1)
-        ->first();
+        ->take(1);
 
-        return $query;
+        if ($id_station != '') {
+            $query->where('s.station_id', '!=', 5);
+        }
+
+        return $query->first();
     }
 
     public static function jsonGrid($start, $length, $search = '', $count = false, $sort, $field)
