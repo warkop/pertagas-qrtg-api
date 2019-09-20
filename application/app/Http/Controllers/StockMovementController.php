@@ -160,7 +160,7 @@ class StockMovementController extends Controller
                 } else {
                     $this->responseCode = 500;
                     // $this->responseData = $res;
-                    $this->responseMessage = 'Station harus dari shipping plant';
+                    $this->responseMessage = 'Station harus dari shipping plant dan kondisinya R1,R2,R3,R4, atau R5';
                 }
             }
 
