@@ -17,8 +17,8 @@ class CreateTableStationRole extends Migration
             $table->increments('station_role_id');
             $table->integer('role_id')->nullable();
             $table->integer('station_id')->nullable();
-            $table->datetime('from_date')->nullable();
-            $table->datetime('end_date')->nullable();
+            $table->date('from_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->string('deleted_by')->nullable();

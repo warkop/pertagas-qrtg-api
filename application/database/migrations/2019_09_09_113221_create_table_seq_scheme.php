@@ -20,8 +20,8 @@ class CreateTableSeqScheme extends Migration
             $table->integer('result_id')->nullable();
             $table->integer('seq_scheme_group_id')->nullable();
             $table->string('scheme_name')->nullable();
-            $table->datetime('from_date')->nullable();
-            $table->datetime('end_date')->nullable();
+            $table->date('from_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->string('deleted_by')->nullable();

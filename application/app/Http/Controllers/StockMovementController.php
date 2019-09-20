@@ -302,26 +302,34 @@ class StockMovementController extends Controller
 
     public function listDestinationStation(Request $req)
     {
-        $id_document = $req->input('document_id');
-        $validator = Validator::make($req->all(), [
-            'document_id' => [
-                'required',
-                'numeric',
-                Rule::exists('document')->where(function ($query) use ($id_document) {
-                    $query->where('document_id',  $id_document);
-                })
-            ],
-        ]);
+        // $id_document = $req->input('document_id');
+        // $validator = Validator::make($req->all(), [
+        //     'document_id' => [
+        //         'required',
+        //         'numeric',
+        //         Rule::exists('document')->where(function ($query) use ($id_document) {
+        //             $query->where('document_id',  $id_document);
+        //         })
+        //     ],
+        // ]);
 
-        if ($validator->fails()) {
-            $this->responseCode = 400;
-            $this->responseMessage = $validator->errors();
+        // if ($validator->fails()) {
+        //     $this->responseCode = 400;
+        //     $this->responseMessage = $validator->errors();
 
-            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
-            return response()->json($response, $this->responseCode);
-        } else {
-            
-        }
+        //     $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+        //     return response()->json($response, $this->responseCode);
+        // } else {
+        $stock_movement = new StockMovement;
+
+        $res = $stock_movement->listDestination(3);
+
+        $this->responseCode = 200;
+        $this->responseData = $res;
+
+        $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+        return response()->json($response, $this->responseCode);
+        // }
     }
 
     public function accept(Request $req)

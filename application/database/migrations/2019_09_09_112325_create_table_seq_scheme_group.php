@@ -17,8 +17,8 @@ class CreateTableSeqSchemeGroup extends Migration
             $table->increments('seq_scheme_group_id');
             $table->string('group_name')->nullable();
             $table->text('group_desc')->nullable();
-            $table->datetime('from_date')->nullable();
-            $table->datetime('end_date')->nullable();
+            $table->date('from_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->string('deleted_by')->nullable();

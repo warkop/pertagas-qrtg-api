@@ -20,8 +20,8 @@ class CreateTableStations extends Migration
             $table->string('abbreviation')->nullable();
             $table->float('lat')->nullable();
             $table->float('long')->nullable();
-            $table->datetime('from_date')->nullable();
-            $table->datetime('end_date')->nullable();
+            $table->date('from_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->string('deleted_by')->nullable();

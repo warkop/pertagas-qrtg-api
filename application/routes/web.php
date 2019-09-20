@@ -93,6 +93,7 @@ $router->group(['prefix' => 'stock_movement', 'middleware' => 'eauth'], function
     $router->patch('/accept', 'StockMovementController@accept');
     $router->patch('/approve_gr', 'StockMovementController@approveGR');
     $router->get('/get_ready_assets', 'StockMovementController@getReadyAssets');
+    $router->get('/list_destination_station', 'StockMovementController@listDestinationStation');
     
     $router->get('/generate_document_number', 'StockMovementController@generateDocumentNumber');
 });

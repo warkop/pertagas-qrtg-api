@@ -19,8 +19,8 @@ class CreateTableReportType extends Migration
             $table->text('report_desc')->nullable();
             $table->string('can_be_ref')->nullable();
             $table->string('has_designation')->nullable();
-            $table->datetime('from_date')->nullable();
-            $table->datetime('end_date')->nullable();
+            $table->date('from_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->string('deleted_by')->nullable();

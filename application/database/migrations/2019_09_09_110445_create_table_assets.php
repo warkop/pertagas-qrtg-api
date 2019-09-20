@@ -23,12 +23,12 @@ class CreateTableAssets extends Migration
             $table->float('net_weight')->nullable();
             $table->string('pics_url')->nullable();
             $table->string('serial_number')->nullable();
-            $table->datetime('manufacture_date')->nullable();
-            $table->datetime('expiry_date')->nullable();
+            $table->date('manufacture_date')->nullable();
+            $table->date('expiry_date')->nullable();
             $table->float('height')->nullable();
             $table->float('width')->nullable();
-            $table->datetime('from_date')->nullable();
-            $table->datetime('end_date')->nullable();
+            $table->date('from_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->string('deleted_by')->nullable();

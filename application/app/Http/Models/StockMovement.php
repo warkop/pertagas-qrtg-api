@@ -182,4 +182,18 @@ class StockMovement extends Model
             return $result->count();
         }
     }
+
+    public function listDestination($id_role)
+    {
+        $query = DB::table('station_role as sr')
+        ->select(
+            'station_role_id',
+	        's.station_id',
+            'station_name')
+        ->join('stations as s', 'sr.station_id', '=', 's.station_id')
+        ->where('role_id', $id_role)
+        ->get();
+
+        return $query;
+    }
 }

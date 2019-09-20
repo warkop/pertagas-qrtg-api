@@ -17,8 +17,8 @@ class CreateTableAssetType extends Migration
             $table->increments('asset_type_id');
             $table->string('asset_name')->nullable();
             $table->text('asset_desc')->nullable();
-            $table->datetime('from_date')->nullable();
-            $table->datetime('end_date')->nullable();
+            $table->date('from_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->string('deleted_by')->nullable();

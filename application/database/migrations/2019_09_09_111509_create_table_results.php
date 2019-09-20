@@ -17,8 +17,8 @@ class CreateTableResults extends Migration
             $table->increments('result_id');
             $table->string('result_name')->nullable();
             $table->text('result_desc')->nullable();
-            $table->datetime('from_date')->nullable();
-            $table->datetime('end_date')->nullable();
+            $table->date('from_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->string('deleted_by')->nullable();

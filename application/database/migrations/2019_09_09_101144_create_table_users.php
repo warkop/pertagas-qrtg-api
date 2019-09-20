@@ -21,8 +21,8 @@ class CreateTableUsers extends Migration
             $table->string('email')->nullable();
             $table->float('lat')->nullable();
             $table->float('long')->nullable();
-            $table->datetime('from_date')->nullable();
-            $table->datetime('end_date')->nullable();
+            $table->date('from_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->string('token')->nullable();
             $table->string('device')->nullable();
             $table->string('os_type')->nullable();
