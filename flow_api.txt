@@ -1,7 +1,11 @@
-flow API
+flow API Stock Movement
 1. Menu Stok Movement -> Stock Movement - List
 2. Tombol tambah stock movement -> Stock Movement - Generate Number Document
 3. Tombol add asset -> Stock Movement - List Asset of Stock Movement
 4. Scan QR code tombol kirim -> Assets - Detail
 5. Tombol add to stock movement -> Stock Movement - Save Asset to Stock Movement
 6. Tombol hapus asset -> Stock Movement - Delete Asset from Stock Movement
+7. Tombol save -> Stock Movement - Save
+8. Draft => tombol approve -> Stock Movement - Accept Good Issue (otomatis mengenerate document GR dan menduplikat asset dari GI yang bersangkutan)
+9. Draft => tombol hapus -> Stock Movement - Delete Stock Movement
+10. GR Draft => tombol approve -> Stock Movement - Approve Good Receive

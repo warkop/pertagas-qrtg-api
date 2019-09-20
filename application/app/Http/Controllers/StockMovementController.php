@@ -185,10 +185,12 @@ class StockMovementController extends Controller
     {
         $id_document = $req->input('document_id');
         $validator = Validator::make($req->all(), [
-            'document_id' => ['required',
-            Rule::exists('document')->where(function ($query) use ($id_document) {
-                $query->where('document_id',  $id_document);
-            })],
+            'document_id' => [
+                'required',
+                'numeric',
+                Rule::exists('document')->where(function ($query) use ($id_document) {
+                    $query->where('document_id',  $id_document);
+                })],
         ]);
 
         if ($validator->fails()) {
@@ -217,6 +219,7 @@ class StockMovementController extends Controller
         $validator = Validator::make($req->all(), [
             'document_id' => [
                 'required',
+                'numeric',
                 Rule::exists('document')->where(function ($query) use ($id_document) {
                     $query->where('document_id',  $id_document);
                 })
@@ -253,6 +256,7 @@ class StockMovementController extends Controller
         $validator = Validator::make($req->all(), [
             'station_id' => [
                 'required',
+                'numeric',
                 Rule::exists('stations')->where(function ($query) use ($id_destination_station) {
                     $query->where('station_id',  $id_destination_station);
                 })
@@ -306,6 +310,7 @@ class StockMovementController extends Controller
         $validator = Validator::make($req->all(), [
             'document_id' => [
                 'required',
+                'numeric',
                 Rule::exists('document')->where(function ($query) use ($id_document) {
                     $query->where('document_id',  $id_document);
                 })
@@ -321,6 +326,7 @@ class StockMovementController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
+
         }
     }
 
@@ -331,6 +337,7 @@ class StockMovementController extends Controller
         $validator = Validator::make($req->all(), [
             'document_id' => [
                 'required',
+                'numeric',
                 Rule::exists('document')->where(function ($query) use ($id_document) {
                     $query->where('document_id',  $id_document);
                     $query->where('document_status',  1);
@@ -402,6 +409,7 @@ class StockMovementController extends Controller
         $validator = Validator::make($req->all(), [
             'document_id' => [
                 'required',
+                'numeric',
                 Rule::exists('document')->where(function ($query) use ($id_document) {
                     $query->where('document_id',  $id_document);
                     $query->where('document_status',  3);
@@ -448,6 +456,7 @@ class StockMovementController extends Controller
         $validator = Validator::make($req->all(), [
             'document_id' => [
                 'required',
+                'numeric',
                 Rule::exists('document')->where(function ($query) use ($id_document) {
                     $query->where('document_id',  $id_document);
                 })
@@ -504,6 +513,7 @@ class StockMovementController extends Controller
         $validator = Validator::make($req->all(), [
             'stock_movement_id' => [
                 'required',
+                'numeric',
                 Rule::exists('stock_movement')->where(function ($query) use ($id_stock_movement) {
                     $query->where('stock_movement_id',  $id_stock_movement);
                 })
@@ -534,6 +544,7 @@ class StockMovementController extends Controller
         $validator = Validator::make($req->all(), [
             'document_id' => [
                 'required',
+                'numeric',
                 Rule::exists('document')->where(function ($query) use ($id_document) {
                     $query->where('document_id',  $id_document);
                 })
