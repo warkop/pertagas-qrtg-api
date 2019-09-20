@@ -487,7 +487,7 @@ class StockMovementController extends Controller
             $stock_movement = Document::where('document_id', $id_document)->get();
             if (!$stock_movement->isEmpty()) {
                 $user = $req->get('my_auth');
-                StockMovement::where('document_id', $id_document)->forceDelete();
+                // StockMovement::where('document_id', $id_document)->forceDelete();
 
                 $arr = [
                     'document_id'   => $id_document,
