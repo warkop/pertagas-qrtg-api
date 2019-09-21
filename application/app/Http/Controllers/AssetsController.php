@@ -126,8 +126,8 @@ class AssetsController extends Controller
                     $query->where('seq_scheme_group_id',  $id_seq_scheme_group);
                 })
             ],
-            'qr_code'               => 'required',
-            'serial_number'         => 'required',
+            'qr_code'               => 'required|unique:assets,qr_code',
+            'serial_number'         => 'required|unique:assets,serial_number',
             'manufacturer_date'     => 'date_format:d-m-Y',
             'expiry_date'           => 'date_format:d-m-Y',
             'pics_url'              => 'file',
