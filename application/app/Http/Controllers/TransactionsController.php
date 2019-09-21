@@ -53,16 +53,22 @@ class TransactionsController extends Controller
 
     public function store(Request $req)
     {
+        $id_asset       = $req->input('asset_id');
         $id_result     = $req->input('result_id');
         $validator = Validator::make($req->all(), [
-            'asset_id' => 'required',
+            'asset_id' => [
+                'required',
+                Rule::exists('assets')->where(function ($query) use ($id_asset) {
+                    $query->where('asset_id',  $id_asset);
+                })
+            ],
             'result_id' => [
                 'required',
                 Rule::exists('results')->where(function ($query) use ($id_result) {
                     $query->where('result_id',  $id_result);
                 })
             ],
-            'snapshot_url' => 'required|file|max:9000',
+            'snapshot_url' => 'required|mimetypes:image/jpeg,image/png,image/bmp,image/gif|max:9000',
         ]);
 
         if ($validator->fails()) {
@@ -73,7 +79,7 @@ class TransactionsController extends Controller
             return response()->json($response, $this->responseCode);
         }
 
-        $id_asset       = $req->input('asset_id');
+        
         $res_assets     = Assets::find($id_asset);
 
         if ($res_assets !== null) {

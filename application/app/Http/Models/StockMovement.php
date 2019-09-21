@@ -26,6 +26,13 @@ class StockMovement extends Model
 
     protected $hidden = [
         'asset_id',
+        'report_type_id',
+        'station_id',
+        'destination_station_id',
+        'document_number',
+        'ref_doc_number',
+        'start_date',
+        'end_date',
         'created_at',
         'created_by',
         'updated_at',
@@ -193,6 +200,27 @@ class StockMovement extends Model
         ->join('stations as s', 'sr.station_id', '=', 's.station_id')
         ->where('role_id', $id_role)
         ->get();
+
+        return $query;
+    }
+
+    public function listScan($id_document, $status='')
+    {
+        $query = DB::table('stock_movement as sm')
+            ->select([
+                'd.document_id',
+                'sm.asset_id',
+                'd.ref_doc_number',
+                'a.serial_number',
+                'at.asset_name',
+            ])
+            ->join('document as d', 'd.document_id', '=', 'sm.document_id')
+            ->join('assets as a', 'a.asset_id', '=', 'sm.asset_id')
+            ->join('asset_type as at', 'at.asset_type_id', '=', 'a.asset_type_id')
+            ->where('sm.document_id', $id_document)
+            ->where('sm.stock_move_status', $status)
+            ->whereNull('sm.deleted_at')
+            ->get();
 
         return $query;
     }

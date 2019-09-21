@@ -96,6 +96,8 @@ $router->group(['prefix' => 'stock_movement', 'middleware' => 'eauth'], function
     $router->get('/list_destination_station', 'StockMovementController@listDestinationStation');
     
     $router->get('/generate_document_number', 'StockMovementController@generateDocumentNumber');
+    $router->patch('/accept_scan', 'StockMovementController@acceptScan');
+    $router->post('/list_scan', 'StockMovementController@listScanned');
 });
 
 $router->get('watch/{nama}/', 'WatchController@default');

@@ -147,6 +147,7 @@ class StockMovementController extends Controller
             $qr_code = $req->input('qr_code');
 
             $res = $assets->getDetail($qr_code);
+            echo $res->station_id;
             if (empty($res)) {
                 $this->responseCode = 400;
                 $this->responseMessage = 'Asset tidak ditemukan';
@@ -159,7 +160,6 @@ class StockMovementController extends Controller
                     ];
                 } else {
                     $this->responseCode = 500;
-                    // $this->responseData = $res;
                     $this->responseMessage = 'Station harus dari shipping plant dan kondisinya R1,R2,R3,R4, atau R5';
                 }
             }
@@ -233,6 +233,103 @@ class StockMovementController extends Controller
             }
 
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        }
+    }
+
+    public function listScanned(Request $req)
+    {
+        $status = $req->input('status');
+        $id_document = $req->input('document_id');
+
+        $validator = Validator::make($req->all(), [
+            'status' => 'required',
+            'document_id'         => [
+                'required',
+                Rule::exists('document')->where(function ($query) use ($id_document) {
+                    $query->where('document_id',  $id_document);
+                })
+            ]
+        ]);
+
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        } else {
+            if ($status == 1 or $status == 2) {
+                $stock_movement = new StockMovement;
+
+                $res = $stock_movement->listScan($id_document, $status);
+
+                $this->responseCode = 200;
+                $this->responseData = $res;
+            } else {
+                $this->responseCode = 400;
+                $this->responseMessage = 'Status parameter tidak dikenali!';
+            }
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus, $this->responseNote);
+            return response()->json($response, $this->responseCode);
+        }
+        
+        
+    }
+
+    public function acceptScan(Request $req)
+    {
+        $user = $req->get('my_auth');
+        $id_document = $req->input('document_id');
+        $id_asset = $req->input('asset_id');
+
+        $validator = Validator::make($req->all(), [
+            'document_id'         => ['required',
+            Rule::exists('document')->where(function ($query) use ($id_document) {
+                $query->where('document_id',  $id_document);
+            })],
+            'asset_id'         => ['required',
+            Rule::exists('assets')->where(function ($query) use ($id_asset) {
+                $query->where('asset_id',  $id_asset);
+            })]
+        ]);
+
+        if ($validator->fails()) {
+            $this->responseCode = 400;
+            $this->responseMessage = $validator->errors();
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            return response()->json($response, $this->responseCode);
+        } else {
+            $assets = new Assets;
+            
+            $rr = $assets->find($id_asset);
+            $qr_code = $rr->qr_code;
+
+            $res = $assets->getDetail($qr_code);
+            if (empty($res)) {
+                $this->responseCode = 500;
+                $this->responseMessage = 'Asset tidak ditemukan';
+            } else {
+                if ($res->station_id == $user->id_station && ($res->result_id == 4 || $res->result_id == 5 || $res->result_id == 6 || $res->result_id == 7 || $res->result_id == 8)) {
+                    $jj = StockMovement::where('asset_id', $id_asset)->where('document_id', $id_document)->first();
+
+                    $jj->stock_move_status = 2;
+                    $jj->updated_at = date('Y-m-d H:i:s');
+                    $jj->updated_by = $user->id_user;
+                    $jj->save();
+
+                    $this->responseCode = 202;
+                    $this->responseData = $jj;
+                    $this->responseMessage = 'Asset Berhasil discan';
+                } else {
+                    $this->responseCode = 500;
+                    $this->responseMessage = 'Station harus dari shipping plant dan kondisinya R1,R2,R3,R4, atau R5';
+                }
+            }
+
+            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus, $this->responseNote);
             return response()->json($response, $this->responseCode);
         }
     }
@@ -381,6 +478,7 @@ class StockMovementController extends Controller
                 $gg = [
                     'document_id'    => $saved->document_id,
                     'asset_id'       => $key->asset_id,
+                    'stock_move_status' => 1,
                     'created_at'     => date('Y-m-d H:i:s'),
                     'created_by'     => $user->id_user,
                 ];
@@ -478,12 +576,13 @@ class StockMovementController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-            $stock_movement = Document::where('document_id', $id_document)->get();
-            if (!$stock_movement->isEmpty()) {
+            $stock_movement = StockMovement::where('asset_id', $id_asset)->get();
+            if ($stock_movement->isEmpty()) {
                 $user = $req->get('my_auth');
                 $arr = [
                     'document_id'   => $id_document,
                     'asset_id'      => $id_asset,
+                    'stock_move_status'      => 1,
                     'created_at'    => date('Y-m-d H:i:s'),
                     'created_by'    => $user->id_user,
                 ];
@@ -498,7 +597,7 @@ class StockMovementController extends Controller
                 return response()->json($response, $this->responseCode);
             } else {
                 $this->responseCode = 400;
-                $this->responseMessage = 'Stock Movement tidak ditemukan!';
+                $this->responseMessage = 'Asset sudah tidak tersedia! Kemungkinan sudah ditambahkan di stock movement lain';
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
 
                 return response()->json($response, $this->responseCode);
