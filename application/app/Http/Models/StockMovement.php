@@ -105,6 +105,7 @@ class StockMovement extends Model
         $query = DB::table('stock_movement as sm')
         ->select([
             'd.document_id',
+            'sm.stock_movement_id',
             'sm.asset_id',
             'd.document_number',
             'a.serial_number',

@@ -85,7 +85,7 @@ $router->group(['prefix' => 'stock_movement', 'middleware' => 'eauth'], function
     $router->post('/', 'StockMovementController@index');
     $router->put('/save', 'StockMovementController@store');
     $router->delete('/delete', 'StockMovementController@delete');
-    $router->delete('/delete_asset/{stock_movement}', 'StockMovementController@deleteAsset');
+    $router->delete('/delete_asset', 'StockMovementController@deleteAsset');
     $router->put('/save_asset', 'StockMovementController@storeAssets');
     $router->delete('/delete_all', 'StockMovementController@deleteAll');
     $router->get('/list_stock_asset', 'StockMovementController@listStockAsset');

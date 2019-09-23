@@ -607,14 +607,22 @@ class StockMovementController extends Controller
 
     public function deleteAsset(Request $req)
     {
-        $id_stock_movement    = $req->input('stock_movement_id');
+        $id_document    = $req->input('document_id');
+        $id_asset    = $req->input('asset_id');
 
         $validator = Validator::make($req->all(), [
-            'stock_movement_id' => [
+            'document_id' => [
                 'required',
                 'numeric',
-                Rule::exists('stock_movement')->where(function ($query) use ($id_stock_movement) {
-                    $query->where('stock_movement_id',  $id_stock_movement);
+                Rule::exists('stock_movement')->where(function ($query) use ($id_document) {
+                    $query->where('document_id',  $id_document);
+                })
+            ],
+            'asset_id' => [
+                'required',
+                'numeric',
+                Rule::exists('stock_movement')->where(function ($query) use ($id_asset) {
+                    $query->where('asset_id',  $id_asset);
                 })
             ],
         ]);
@@ -626,7 +634,7 @@ class StockMovementController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-            $resource = StockMovement::find($id_stock_movement);
+            $resource = StockMovement::where('document_id', $id_document)->where('asset_id', $id_asset)->first();
             $resource->forceDelete();
 
             $this->responseCode = 202;
