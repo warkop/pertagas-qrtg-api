@@ -6,6 +6,8 @@ use App\Http\Models\StockMovement;
 use App\Http\Models\Document;
 use App\Http\Models\ReportType;
 use App\Http\Models\Assets;
+use App\Http\Models\Transactions;
+use App\Http\Models\SeqScheme;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -17,6 +19,16 @@ class StockMovementController extends Controller
     private $responseMessage = '';
     private $responseData = [];
     private $responseNote = null;
+
+    private function processing($res_transaction, $id_result)
+    {
+        $res_seq_scheme  = new SeqScheme;
+
+        $obj = $res_seq_scheme->where('predecessor_station_id', $res_transaction->station_id)->where('result_id', $id_result)->first();
+        if ($obj !== null) {
+            return $obj->station_id;
+        }
+    }
 
     public function index(Request $req)
     {
@@ -312,13 +324,39 @@ class StockMovementController extends Controller
                 $this->responseCode = 500;
                 $this->responseMessage = 'Asset tidak ditemukan';
             } else {
-                if ($res->station_id == $user->id_station && ($res->result_id == 4 || $res->result_id == 5 || $res->result_id == 6 || $res->result_id == 7 || $res->result_id == 8)) {
+                if ($res->station_id == 6 && ($res->result_id == 4 || $res->result_id == 5 || $res->result_id == 6 || $res->result_id == 7 || $res->result_id == 8)) {
                     $jj = StockMovement::where('asset_id', $id_asset)->where('document_id', $id_document)->first();
 
                     $jj->stock_move_status = 2;
                     $jj->updated_at = date('Y-m-d H:i:s');
                     $jj->updated_by = $user->id_user;
                     $jj->save();
+
+                    $res_doc = Document::find($id_document);
+
+                    // foreach ($stock_movement as $key) {
+                        $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('created_at', 'desc')->take(1)->first();
+                        // if (empty($res_trans)) {
+                        //     $station = 2;
+                        // } else {
+                        //     $station = $this->processing($res_trans, $res_trans->result_id);
+                        // }
+                        if ($res_doc->destination_station_id == 3) {
+                            $result_status = 10;
+                        } else if ($res_doc->destination_station_id == 2) {
+                            $result_status = 11;
+                        }
+
+                        $arr_store = [
+                            'asset_id' => $id_asset,
+                            'station_id' => $res_doc->destination_station_id,
+                            'result_id' => $result_status,
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'created_by' => $user->id_user,
+                        ];
+
+                        $saved = Transactions::create($arr_store);
+                    // }
 
                     $this->responseCode = 202;
                     $this->responseData = $jj;
@@ -419,7 +457,7 @@ class StockMovementController extends Controller
         // } else {
         $stock_movement = new StockMovement;
 
-        $res = $stock_movement->listDestination(3);
+        $res = $stock_movement->listDestination();
 
         $this->responseCode = 200;
         $this->responseData = $res;
@@ -463,7 +501,8 @@ class StockMovementController extends Controller
             $arr = [
                 'ref_doc_number'            => $res->document_number,
                 'report_type_id'            => $report_type->report_type_id,
-                'station_id'                => $res->destination_station_id,
+                'station_id'                => $res->station_id,
+                'destination_station_id'    => $res->destination_station_id,
                 'document_status'           => 3,
                 'start_date'                => date('Y-m-d', strtotime($res->start_date)),
                 'end_date'                  => date('Y-m-d', strtotime($res->end_date)),
@@ -492,6 +531,25 @@ class StockMovementController extends Controller
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             } else {
+                foreach ($stock_movement as $key) {
+                    $res_trans = Transactions::where('asset_id', $key->asset_id)->orderBy('created_at', 'desc')->take(1)->first();
+                    if (empty($res_trans)) {
+                        $station = 2;
+                    } else {
+                        $station = $this->processing($res_trans, $res_trans->result_id);
+                    }
+    
+                    $arr_store = [
+                        'asset_id' => $key->asset_id,
+                        'station_id' => $station,
+                        'result_id' => $res_trans->result_id,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'created_by' => $user->id_user,
+                    ];
+    
+                    $saved = Transactions::create($arr_store);
+                }
+
                 $this->responseCode         = 201;
                 $this->responseMessage      = 'Data berhasil disimpan!';
                 $this->responseData         = $saved;

@@ -108,6 +108,7 @@ class StockMovement extends Model
             'sm.stock_movement_id',
             'sm.asset_id',
             'd.document_number',
+            'a.qr_code',
             'a.serial_number',
             'at.asset_name',
         ])
@@ -191,15 +192,14 @@ class StockMovement extends Model
         }
     }
 
-    public function listDestination($id_role)
+    public function listDestination()
     {
-        $query = DB::table('station_role as sr')
+        $query = DB::table('stations as s')
         ->select(
-            'station_role_id',
 	        's.station_id',
             'station_name')
-        ->join('stations as s', 'sr.station_id', '=', 's.station_id')
-        ->where('role_id', $id_role)
+        ->where('station_id', 3)
+        ->orWhere('station_id', 2)
         ->get();
 
         return $query;
