@@ -62,9 +62,15 @@ class StockMovement extends Model
     {
         $result = DB::table('document as d')
             ->select([
-                'document_id', 
-                'document_number',
-                'ref_doc_number', 
+                'document_id',
+                DB::raw('(CASE 
+                    WHEN d.document_status = 1 AND rt.can_be_ref IS NULL THEN document_number
+                    WHEN d.document_status = 2 AND rt.can_be_ref IS NULL THEN document_number
+                    WHEN d.document_status = 3 AND rt.can_be_ref IS NOT NULL THEN ref_doc_number
+                    WHEN d.document_status = 4 AND rt.can_be_ref IS NOT NULL THEN ref_doc_number
+                END) as document_number'),
+                // 'document_number',
+                // 'ref_doc_number', 
                 's.station_id', 
                 's.station_name as station', 
                 'ss.station_id as destination_id',
