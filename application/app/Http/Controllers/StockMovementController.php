@@ -332,30 +332,30 @@ class StockMovementController extends Controller
                     $jj->updated_by = $user->id_user;
                     $jj->save();
 
-                    $res_doc = Document::find($id_document);
+                    // $res_doc = Document::find($id_document);
 
                     // foreach ($stock_movement as $key) {
-                        $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('created_at', 'desc')->take(1)->first();
+                        // $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('created_at', 'desc')->take(1)->first();
                         // if (empty($res_trans)) {
                         //     $station = 2;
                         // } else {
                         //     $station = $this->processing($res_trans, $res_trans->result_id);
                         // }
-                        if ($res_doc->destination_station_id == 3) {
-                            $result_status = 10;
-                        } else if ($res_doc->destination_station_id == 2) {
-                            $result_status = 11;
-                        }
+                        // if ($res_doc->destination_station_id == 3) {
+                        //     $result_status = 10;
+                        // } else if ($res_doc->destination_station_id == 2) {
+                        //     $result_status = 11;
+                        // }
 
-                        $arr_store = [
-                            'asset_id' => $id_asset,
-                            'station_id' => $res_doc->destination_station_id,
-                            'result_id' => $result_status,
-                            'created_at' => date('Y-m-d H:i:s'),
-                            'created_by' => $user->id_user,
-                        ];
+                        // $arr_store = [
+                        //     'asset_id' => $id_asset,
+                        //     'station_id' => $res_doc->destination_station_id,
+                        //     'result_id' => $result_status,
+                        //     'created_at' => date('Y-m-d H:i:s'),
+                        //     'created_by' => $user->id_user,
+                        // ];
 
-                        $saved = Transactions::create($arr_store);
+                        // $saved = Transactions::create($arr_store);
                     // }
 
                     $this->responseCode = 202;
