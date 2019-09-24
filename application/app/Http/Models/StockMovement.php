@@ -130,6 +130,7 @@ class StockMovement extends Model
             d.report_type_id,
             d.station_id,
             d.destination_station_id,
+            (select station_name from stations where station_id = d.destination_station_id) destination_name,
             document_number,
             ref_doc_number,
             s.station_name,
