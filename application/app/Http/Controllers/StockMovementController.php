@@ -56,7 +56,7 @@ class StockMovementController extends Controller
             $sort = $order??'desc';
             $field = 'd.created_at';
 
-            $total = $res->jsonGrid($start, $perpage, $search, true, $sort, $field);
+            // $total = $res->jsonGrid($start, $perpage, $search, true, $sort, $field);
             $resource = $res->jsonGrid($start, $perpage, $search, false, $sort, $field);
 
             $this->responseCode = 200;
@@ -159,7 +159,6 @@ class StockMovementController extends Controller
             $qr_code = $req->input('qr_code');
 
             $res = $assets->getDetail($qr_code);
-            echo $res->station_id;
             if (empty($res)) {
                 $this->responseCode = 400;
                 $this->responseMessage = 'Asset tidak ditemukan';

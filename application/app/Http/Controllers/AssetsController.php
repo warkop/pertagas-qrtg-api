@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Models\Assets;
+use App\Http\Models\SeqScheme;
 use App\Http\Models\Transactions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -62,16 +63,15 @@ class AssetsController extends Controller
         return response()->json($response, $this->responseCode);
     }
 
-    public function testDetail($id_asset)
-    {
-        $res = Assets::find($id_asset)->assetType()->get();
-        return $res;
-    }
-
     public function detail(Request $req)
     {
+        $qr_code = $req->input('qr_code');
         $validator = Validator::make($req->all(), [
-            'qr_code'         => 'required',
+            'qr_code'         => [
+            'required',
+            Rule::exists('assets')->where(function ($query) use ($qr_code) {
+                $query->where('qr_code',  $qr_code);
+            })],
         ]);
 
         if ($validator->fails()) {
@@ -81,21 +81,31 @@ class AssetsController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-            $assets = new Assets;
-            $qr_code = $req->input('qr_code');
+            $user = $req->get('my_auth');
+            $assets = Assets::where('qr_code', $qr_code)->first();
+            $transactions = Transactions::where('asset_id', $assets->asset_id)->orderBy('transaction_id', 'desc')->take(1)->first();
+            $seq_scheme = SeqScheme::where('station_id', $user->id_station)
+            ->where('predecessor_station_id', $transactions->station_id)
+            ->where('result_id', $transactions->result_id)
+            ->first();
 
-            $res = $assets->getDetail($qr_code);
-            if (empty($res)) {
-                $this->responseCode = 400;
-                $this->responseMessage = 'Asset tidak ditemukan';
+            if (!empty($seq_scheme)) {
+                $res = $assets->getDetail($qr_code);
+                if (empty($res)) {
+                    $this->responseCode = 400;
+                    $this->responseMessage = 'Asset tidak ditemukan';
+                } else {
+                    $this->responseCode = 200;
+                    $this->responseData = $res;
+                    $this->responseNote['pics_url'] = [
+                        'url' => '{base_url}/watch/{pics_url}?token={access_token}&un={asset_id}&ctg=assets&src={pics_url}'
+                    ];
+                }
             } else {
-                $this->responseCode = 200;
-                $this->responseData = $res;
-                $this->responseNote['pics_url'] = [
-                    'url' => '{base_url}/watch/{pics_url}?token={access_token}&un={asset_id}&ctg=assets&src={pics_url}'
-                ];
+                $this->responseCode = 500;
+                $this->responseMessage = 'Asset tidak sesuai posisi station Anda, silahkan login dengan akun lain atau scan Tabung yang lain!';
             }
-    
+
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus, $this->responseNote);
             return response()->json($response, $this->responseCode);
         }
@@ -195,10 +205,10 @@ class AssetsController extends Controller
                         $resource->save();
                     }
 
-
                     $arr_store = [
                         'asset_id' => $res->asset_id,
-                        'station_id' => 2,
+                        'station_id' => 1,
+                        'result_id' => 13,
                         'created_at' => date('Y-m-d H:i:s'),
                         'created_by' => $user->id_user,
                     ];

@@ -16,10 +16,15 @@ class TransactionsController extends Controller
     private $responseStatus = '';
     private $responseMessage = '';
     private $responseData = [];
-    
-    public function __construct()
+
+    private function processing($station_id, $id_result)
     {
-        //
+        $res_seq_scheme  = new SeqScheme;
+
+        $obj = $res_seq_scheme->where('predecessor_station_id', $station_id)->where('result_id', $id_result)->first();
+        if (!empty($obj)) {
+            return $obj->station_id;
+        }
     }
 
     public function index()
@@ -53,6 +58,7 @@ class TransactionsController extends Controller
 
     public function store(Request $req)
     {
+        $user = $req->get('my_auth');
         $id_asset       = $req->input('asset_id');
         $id_result     = $req->input('result_id');
         $validator = Validator::make($req->all(), [
@@ -76,73 +82,66 @@ class TransactionsController extends Controller
             $this->responseMessage = $validator->errors();
 
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
-            return response()->json($response, $this->responseCode);
-        }
+        } else {
+            // $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('transaction_id', 'desc')->take(1)->first();
+            // $assets = Assets::where('qr_code', $qr_code)->first();
+            $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('transaction_id', 'desc')->take(1)->first();
+            $seq_scheme = SeqScheme::where('station_id', $user->id_station)
+                ->where('predecessor_station_id', $res_trans->station_id)
+                ->where('result_id', $res_trans->result_id)
+                ->first();
 
-        
-        $res_assets     = Assets::find($id_asset);
-
-        if ($res_assets !== null) {
-            $user = $req->get('my_auth');
-
-            $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('created_at', 'desc')->take(1)->first();
-            if (empty($res_trans)) {
-                $station = 2;
-            } else {
-                $station = $this->processing($res_trans, $id_result);
-            }
-
-            $arr_store = [
-                'asset_id' => $id_asset,
-                'station_id' => $station,
-                'result_id' => $id_result,
-                'created_at' => date('Y-m-d H:i:s'),
-                'created_by' => $user->id_user,
-            ];
-
-            $saved = Transactions::create($arr_store);
-            if (!$saved) {
-                $this->responseCode = 502;
-                $this->responseMessage = 'Data gagal disimpan!';
+            if (empty($seq_scheme)) {
+                $this->responseCode = 500;
+                $this->responseMessage = 'Asset tidak sesuai posisi station Anda, silahkan login dengan akun lain atau scan Tabung yang lain!';
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             } else {
-                $snapshot = $req->file('snapshot_url')->getClientOriginalName();
-                if ($req->file('snapshot_url')->isValid()) {
-                    $destinationPath = storage_path('app/public').'/transactions/'.$saved->transaction_id;
-                    $req->file('snapshot_url')->move($destinationPath, $snapshot);
+                if ($res_trans->result_id == 14 || $res_trans->result_id == 15 || $res_trans->result_id == 16 || $res_trans->result_id == 17 || $res_trans->result_id == 18) {
+                    if (true) {
 
-                    $temp_trans = Transactions::find($saved->transaction_id);
+                    }
+                } else {
+                    $station = $this->processing($res_trans->station_id, $res_trans->result_id);
 
-                    $temp_trans->snapshot_url = $snapshot;
-                    $temp_trans->save();
+                    $arr_store = [
+                        'asset_id' => $id_asset,
+                        'station_id' => $station,
+                        'result_id' => $id_result,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'created_by' => $user->id_user,
+                    ];
+
+                    $saved = Transactions::create($arr_store);
+
+                    if (!$saved) {
+                        $this->responseCode = 502;
+                        $this->responseMessage = 'Data gagal disimpan!';
+                    } else {
+                        $snapshot = $req->file('snapshot_url')->getClientOriginalName();
+                        if ($req->file('snapshot_url')->isValid()) {
+                            $destinationPath = storage_path('app/public') . '/transactions/' . $saved->transaction_id;
+                            $req->file('snapshot_url')->move($destinationPath, $snapshot);
+
+                            $temp_trans = Transactions::find($saved->transaction_id);
+
+                            $temp_trans->snapshot_url = $snapshot;
+                            $temp_trans->save();
+                        }
+
+
+                        $this->responseCode = 201;
+                        $this->responseMessage = 'Data berhasil disimpan!';
+                        $this->responseData = $temp_trans;
+                    }
+                    $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
                 }
 
-
-                $this->responseCode = 201;
-                $this->responseMessage = 'Data berhasil disimpan!';
-                $this->responseData = $temp_trans;
-
-                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                
             }
-        } else {
-            $this->responseCode = 500;
-            $this->responseMessage = 'ID Asset tidak ditemukan!';
-
-            $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         }
 
         return response()->json($response, $this->responseCode);
-    }
-
-    public function processing($res_transaction, $id_result)
-    {
-        $res_seq_scheme  = new SeqScheme;
-
-        $obj = $res_seq_scheme->where('predecessor_station_id', $res_transaction->station_id)->where('result_id', $id_result)->first();
-        if ($obj !== null) {
-            return $obj->station_id;
-        }
     }
 
     public function generateResult(Request $req)
@@ -162,34 +161,23 @@ class TransactionsController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-            $id_station = $req->input('station_id');
-            
+            $user = $req->get('my_auth');
 
-            if ($id_station == null) {
-                $gathel = Transactions::where('asset_id', $id_asset)->get();
+            $gathel = Transactions::where('asset_id', $id_asset)->orderBy('transaction_id', 'desc')->first();
 
-                if ($gathel->isEmpty()) {
-                    $seq_scheme = new SeqScheme();
-                    $res = $seq_scheme->getResultByStation(1);
-
-                    $this->responseCode = 200;
-                    $this->responseData = $res;
-
-                    $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
-                } else {
-                $this->responseCode = 500;
-                $this->responseData = '';
-                $this->responseMessage = 'Asset tidak ditemukan di transaksi dan station harus ada!';
-
-                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
-                }
-            } else {
+            if (!empty($gathel)) {
                 $seq_scheme = new SeqScheme();
-                $res = $seq_scheme->getResultByStation($id_station);
-    
+                $res = $seq_scheme->getResultByStation($user->id_station);
+
                 $this->responseCode = 200;
                 $this->responseData = $res;
-    
+
+                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+            } else {
+                $this->responseCode = 500;
+                $this->responseData = $gathel;
+                $this->responseMessage = 'Asset tidak ditemukan di transaksi dan station harus ada!';
+
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             }
 
