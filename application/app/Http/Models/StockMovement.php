@@ -136,8 +136,8 @@ class StockMovement extends Model
             s.abbreviation,
             rt.report_name,
             rt.report_desc,
-            d.start_date,
-            d.end_date
+            TO_CHAR(d.start_date, \'dd-mm-yyyy\') AS start_date,
+            TO_CHAR(d.end_date, \'dd-mm-yyyy\') AS end_date
             ')
         ->leftJoin('stations as s', 's.station_id', '=', 'd.station_id')
         ->leftJoin('report_type as rt', 'd.report_type_id', '=', 'rt.report_type_id')
