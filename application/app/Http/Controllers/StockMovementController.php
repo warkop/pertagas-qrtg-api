@@ -457,7 +457,7 @@ class StockMovementController extends Controller
         // } else {
         $stock_movement = new StockMovement;
 
-        $res = $stock_movement->listDestination();
+        $res = $stock_movement->listDestination(3);
 
         $this->responseCode = 200;
         $this->responseData = $res;

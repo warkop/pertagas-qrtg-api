@@ -199,15 +199,17 @@ class StockMovement extends Model
         }
     }
 
-    public function listDestination()
+    public function listDestination($id_role)
     {
-        $query = DB::table('stations as s')
-        ->select(
-	        's.station_id',
-            'station_name')
-        ->where('station_id', 3)
-        ->orWhere('station_id', 2)
-        ->get();
+        $query = DB::table('station_role as sr')
+            ->select(
+                'station_role_id',
+                's.station_id',
+                'station_name'
+            )
+            ->join('stations as s', 'sr.station_id', '=', 's.station_id')
+            ->where('role_id', $id_role)
+            ->get();
 
         return $query;
     }
