@@ -58,7 +58,7 @@ class StockMovement extends Model
         return $query;
     }
 
-    public static function jsonGrid($start, $length, $search = '', $count = false, $sort, $field)
+    public static function jsonGrid($start, $length, $search = '', $count = false, $sort, $field, $user)
     {
         $result = DB::table('document as d')
             ->select([
@@ -89,6 +89,7 @@ class StockMovement extends Model
             ->leftJoin('stations as s', 's.station_id', '=', 'd.station_id')
             ->leftJoin('stations as ss', 'ss.station_id', '=', 'd.destination_station_id')
             ->leftJoin('report_type as rt', 'rt.report_type_id', '=', 'd.report_type_id')
+            ->where('d.station_id', $user->id_station)
             ->whereNull('d.deleted_at');
         if (!empty($search)) {
             $result = $result->where(function ($where) use ($search) {
@@ -199,17 +200,21 @@ class StockMovement extends Model
         }
     }
 
-    public function listDestination()
+    public function listDestination($role_id)
     {
-        $query = DB::table('stations as s')
-        ->select(
-	        's.station_id',
-            'station_name')
-        ->where('station_id', 3)
-        ->orWhere('station_id', 2)
+        $query = DB::table('station_role as sr')
+            ->select(
+                'role_id',
+                'sr.station_id',
+                'station_name',
+                'abbreviation'
+            )
+        ->join('stations as s', 'sr.station_id', '=', 's.station_id')
+        ->where('sr.role_id', $role_id)
         ->get();
 
         return $query;
+
     }
 
     public function listScan($id_document, $status='')
@@ -219,6 +224,7 @@ class StockMovement extends Model
                 'd.document_id',
                 'sm.asset_id',
                 'd.ref_doc_number',
+                'a.qr_code',
                 'a.serial_number',
                 'at.asset_name',
             ])

@@ -6,8 +6,8 @@ use App\Http\Models\StockMovement;
 use App\Http\Models\Document;
 use App\Http\Models\ReportType;
 use App\Http\Models\Assets;
-use App\Http\Models\Transactions;
 use App\Http\Models\SeqScheme;
+use App\Http\Models\StationRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -19,16 +19,6 @@ class StockMovementController extends Controller
     private $responseMessage = '';
     private $responseData = [];
     private $responseNote = null;
-
-    private function processing($res_transaction, $id_result)
-    {
-        $res_seq_scheme  = new SeqScheme;
-
-        $obj = $res_seq_scheme->where('predecessor_station_id', $res_transaction->station_id)->where('result_id', $id_result)->first();
-        if ($obj !== null) {
-            return $obj->station_id;
-        }
-    }
 
     public function index(Request $req)
     {
@@ -43,6 +33,7 @@ class StockMovementController extends Controller
             $this->responseMessage = 'Silahkan isi form dengan benar terlebih dahulu';
             $this->responseData = $validator->errors();
         } else {
+            $user = $req->get('my_auth');
             $res = new StockMovement();
 
             $start = $req->input('start');
@@ -57,7 +48,7 @@ class StockMovementController extends Controller
             $field = 'd.created_at';
 
             // $total = $res->jsonGrid($start, $perpage, $search, true, $sort, $field);
-            $resource = $res->jsonGrid($start, $perpage, $search, false, $sort, $field);
+            $resource = $res->jsonGrid($start, $perpage, $search, false, $sort, $field, $user);
 
             $this->responseCode = 200;
             $this->responseData = $resource;
@@ -142,10 +133,16 @@ class StockMovementController extends Controller
 
     public function getReadyAssets(Request $req)
     {
-        $user = $req->get('my_auth');
+        $user       = $req->get('my_auth');
+        $qr_code    = $req->input('qr_code');
 
         $validator = Validator::make($req->all(), [
-            'qr_code'         => 'required',
+            'qr_code'         => [
+                'required',
+                Rule::exists('assets')->where(function ($query) use ($qr_code) {
+                    $query->where('qr_code',  $qr_code);
+                })
+            ],
         ]);
 
         if ($validator->fails()) {
@@ -156,14 +153,13 @@ class StockMovementController extends Controller
             return response()->json($response, $this->responseCode);
         } else {
             $assets = new Assets;
-            $qr_code = $req->input('qr_code');
 
             $res = $assets->getDetail($qr_code);
             if (empty($res)) {
                 $this->responseCode = 400;
                 $this->responseMessage = 'Asset tidak ditemukan';
             } else {
-                if ($res->station_id == $user->id_station && ($res->result_id == 4 || $res->result_id == 5 || $res->result_id == 6 || $res->result_id == 7 || $res->result_id == 8)) {
+                if ($res->station_id == $user->id_station) {
                     $this->responseCode = 200;
                     $this->responseData = $res;
                     $this->responseNote['pics_url'] = [
@@ -171,7 +167,7 @@ class StockMovementController extends Controller
                     ];
                 } else {
                     $this->responseCode = 500;
-                    $this->responseMessage = 'Station harus dari shipping plant dan kondisinya R1,R2,R3,R4, atau R5';
+                    $this->responseMessage = 'Tabung yang Anda scan tidak diizinkan oleh sistem untuk Anda jadikan stock movement!';
                 }
             }
 
@@ -189,6 +185,7 @@ class StockMovementController extends Controller
                 'numeric',
                 Rule::exists('document')->where(function ($query) use ($id_document) {
                     $query->where('document_id',  $id_document);
+                    $query->where('ref_doc_number', null);
                 })],
         ]);
 
@@ -259,6 +256,7 @@ class StockMovementController extends Controller
                 'required',
                 Rule::exists('document')->where(function ($query) use ($id_document) {
                     $query->where('document_id',  $id_document);
+                    $query->where('document_number', null);
                 })
             ]
         ]);
@@ -321,48 +319,22 @@ class StockMovementController extends Controller
             $res = $assets->getDetail($qr_code);
             if (empty($res)) {
                 $this->responseCode = 500;
-                $this->responseMessage = 'Asset tidak ditemukan';
+                $this->responseMessage = 'Tabung tidak ditemukan';
             } else {
-                if ($res->station_id == 6 && ($res->result_id == 4 || $res->result_id == 5 || $res->result_id == 6 || $res->result_id == 7 || $res->result_id == 8)) {
-                    $jj = StockMovement::where('asset_id', $id_asset)->where('document_id', $id_document)->first();
+                if ($res->station_id == $user->id_station) {
+                    $jj = StockMovement::where('asset_id', $id_asset)->where('document_id', $id_document)->orderBy('stock_movement_id', 'desc')->first();
 
                     $jj->stock_move_status = 2;
                     $jj->updated_at = date('Y-m-d H:i:s');
                     $jj->updated_by = $user->id_user;
                     $jj->save();
 
-                    $res_doc = Document::find($id_document);
-
-                    // foreach ($stock_movement as $key) {
-                        $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('created_at', 'desc')->take(1)->first();
-                        // if (empty($res_trans)) {
-                        //     $station = 2;
-                        // } else {
-                        //     $station = $this->processing($res_trans, $res_trans->result_id);
-                        // }
-                        if ($res_doc->destination_station_id == 3) {
-                            $result_status = 10;
-                        } else if ($res_doc->destination_station_id == 2) {
-                            $result_status = 11;
-                        }
-
-                        $arr_store = [
-                            'asset_id' => $id_asset,
-                            'station_id' => $res_doc->destination_station_id,
-                            'result_id' => $result_status,
-                            'created_at' => date('Y-m-d H:i:s'),
-                            'created_by' => $user->id_user,
-                        ];
-
-                        $saved = Transactions::create($arr_store);
-                    // }
-
                     $this->responseCode = 202;
                     $this->responseData = $jj;
-                    $this->responseMessage = 'Asset Berhasil discan';
+                    $this->responseMessage = 'Tabung Berhasil discan';
                 } else {
                     $this->responseCode = 500;
-                    $this->responseMessage = 'Station harus dari shipping plant dan kondisinya R1,R2,R3,R4, atau R5';
+                    $this->responseMessage = 'Station tidak sesuai dengan profil station akun Anda!';
                 }
             }
 
@@ -382,6 +354,7 @@ class StockMovementController extends Controller
                 'numeric',
                 Rule::exists('document')->where(function ($query) use ($id_document) {
                     $query->where('document_id',  $id_document);
+                    $query->where('document_status',  1);
                 })
             ],
             'station_id' => [
@@ -410,23 +383,31 @@ class StockMovementController extends Controller
 
             $res = Document::find($id_document);
 
-            $res->destination_station_id    = $id_destination_station;
-            $res->start_date                = date('Y-m-d', strtotime($start_date));
-            $res->end_date                  = date('Y-m-d', strtotime($end_date));
-            $res->updated_at                = date('Y-m-d H:i:s');
-            $res->updated_by                = $user->id_user;
+            $res_station_role = StationRole::where('role_id', $user->role)->where('station_id', $id_destination_station)->get();
+            if (!$res_station_role->isEmpty()) {
+                $res->destination_station_id    = $id_destination_station;
+                $res->start_date                = date('Y-m-d', strtotime($start_date));
+                $res->end_date                  = date('Y-m-d', strtotime($end_date));
+                $res->updated_at                = date('Y-m-d H:i:s');
+                $res->updated_by                = $user->id_user;
 
-            $saved = $res->save();
+                $saved = $res->save();
 
-            if (!$saved) {
-                $this->responseCode     = 502;
-                $this->responseMessage  = 'Data gagal disimpan!';
+                if (!$saved) {
+                    $this->responseCode     = 502;
+                    $this->responseMessage  = 'Data gagal disimpan!';
 
-                $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                    $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                } else {
+                    $this->responseCode         = 201;
+                    $this->responseMessage      = 'Data berhasil disimpan!';
+                    $this->responseData         = $res;
+
+                    $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
+                }
             } else {
-                $this->responseCode         = 201;
-                $this->responseMessage      = 'Data berhasil disimpan!';
-                $this->responseData         = $saved;
+                $this->responseCode     = 500;
+                $this->responseMessage  = 'Station destination tidak diizinkan, silahkan ganti dengan station yang lain!';
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             }
@@ -436,34 +417,16 @@ class StockMovementController extends Controller
 
     public function listDestinationStation(Request $req)
     {
-        // $id_document = $req->input('document_id');
-        // $validator = Validator::make($req->all(), [
-        //     'document_id' => [
-        //         'required',
-        //         'numeric',
-        //         Rule::exists('document')->where(function ($query) use ($id_document) {
-        //             $query->where('document_id',  $id_document);
-        //         })
-        //     ],
-        // ]);
-
-        // if ($validator->fails()) {
-        //     $this->responseCode = 400;
-        //     $this->responseMessage = $validator->errors();
-
-        //     $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
-        //     return response()->json($response, $this->responseCode);
-        // } else {
+        $user = $req->get('my_auth');
         $stock_movement = new StockMovement;
 
-        $res = $stock_movement->listDestination();
+        $res = $stock_movement->listDestination($user->role);
 
         $this->responseCode = 200;
         $this->responseData = $res;
 
         $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
         return response()->json($response, $this->responseCode);
-        // }
     }
 
     public function accept(Request $req)
@@ -488,9 +451,9 @@ class StockMovementController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-            $user = $req->get('my_auth');
-            $id_document         = $req->input('document_id');
-            $res = Document::find($id_document);
+            $user           = $req->get('my_auth');
+            $id_document    = $req->input('document_id');
+            $res            = Document::find($id_document);
 
             $res->document_status = 2;
             $res->save();
@@ -530,27 +493,8 @@ class StockMovementController extends Controller
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             } else {
-                foreach ($stock_movement as $key) {
-                    $res_trans = Transactions::where('asset_id', $key->asset_id)->orderBy('created_at', 'desc')->take(1)->first();
-                    if (empty($res_trans)) {
-                        $station = 2;
-                    } else {
-                        $station = $this->processing($res_trans, $res_trans->result_id);
-                    }
-    
-                    $arr_store = [
-                        'asset_id' => $key->asset_id,
-                        'station_id' => $station,
-                        'result_id' => $res_trans->result_id,
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'created_by' => $user->id_user,
-                    ];
-    
-                    $saved = Transactions::create($arr_store);
-                }
-
                 $this->responseCode         = 201;
-                $this->responseMessage      = 'Data berhasil disimpan!';
+                $this->responseMessage      = 'Data berhasil disetujui!';
                 $this->responseData         = $saved;
 
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
@@ -567,9 +511,10 @@ class StockMovementController extends Controller
             'document_id' => [
                 'required',
                 'numeric',
-                Rule::exists('document')->where(function ($query) use ($id_document) {
+                Rule::exists('document')->where(function ($query) use ($id_document, $user) {
                     $query->where('document_id',  $id_document);
                     $query->where('document_status',  3);
+                    $query->where('station_id', $user->id_station);
                 })
             ],
         ]);
@@ -633,15 +578,15 @@ class StockMovementController extends Controller
             $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
             return response()->json($response, $this->responseCode);
         } else {
-            $stock_movement = StockMovement::where('asset_id', $id_asset)->get();
-            if ($stock_movement->isEmpty()) {
+            $stock_movement = StockMovement::where('asset_id', $id_asset)->where('document_id', $id_document)->where('stock_move_status', 1)->orderBy('stock_movement', 'desc')->first();
+            if (empty($stock_movement)) {
                 $user = $req->get('my_auth');
                 $arr = [
-                    'document_id'   => $id_document,
-                    'asset_id'      => $id_asset,
-                    'stock_move_status'      => 1,
-                    'created_at'    => date('Y-m-d H:i:s'),
-                    'created_by'    => $user->id_user,
+                    'document_id'               => $id_document,
+                    'asset_id'                  => $id_asset,
+                    'stock_move_status'         => 1,
+                    'created_at'                => date('Y-m-d H:i:s'),
+                    'created_by'                => $user->id_user,
                 ];
 
                 StockMovement::create($arr);
@@ -654,7 +599,8 @@ class StockMovementController extends Controller
                 return response()->json($response, $this->responseCode);
             } else {
                 $this->responseCode = 400;
-                $this->responseMessage = 'Asset sudah tidak tersedia! Kemungkinan sudah ditambahkan di stock movement lain';
+                $this->responseData = $req->all();
+                $this->responseMessage = 'Tabung sudah tidak tersedia! Kemungkinan sudah ditambahkan di stock movement ini atau stock movement lain';
                 $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
 
                 return response()->json($response, $this->responseCode);
@@ -672,14 +618,16 @@ class StockMovementController extends Controller
                 'required',
                 'numeric',
                 Rule::exists('stock_movement')->where(function ($query) use ($id_document) {
-                    $query->where('document_id',  $id_document);
+                    $query->where('document_id',  $id_document)
+                    ->where('document_status', 1);
                 })
             ],
             'asset_id' => [
                 'required',
                 'numeric',
                 Rule::exists('stock_movement')->where(function ($query) use ($id_asset) {
-                    $query->where('asset_id',  $id_asset);
+                    $query->where('asset_id',  $id_asset)
+                    ->where('stock_move_status', 1);
                 })
             ],
         ]);
@@ -710,7 +658,8 @@ class StockMovementController extends Controller
                 'required',
                 'numeric',
                 Rule::exists('document')->where(function ($query) use ($id_document) {
-                    $query->where('document_id',  $id_document);
+                    $query->where('document_id',  $id_document)
+                    ->where('document_status',  1);
                 })
             ],
         ]);

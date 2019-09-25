@@ -35,7 +35,7 @@ class Assets extends Model
         return $this->hasMany('App\Http\Models\AssetType', 'asset_type_id', 'asset_type_id');
     }
 
-    public function getDetail($qr_code, $id_station='')
+    public function getDetail($qr_code)
     {
         $query = DB::table(DB::raw('assets a'))
         ->selectRaw('
@@ -50,8 +50,8 @@ class Assets extends Model
         pics_url,
         qr_code,
         serial_number,
-        TO_CHAR(manufacture_date, \'dd/mm/yyyy\') as manufacture_date,
-        TO_CHAR(expiry_date, \'dd/mm/yyyy\') as expiry_date,
+        TO_CHAR(manufacture_date, \'dd-mm-yyyy\') as manufacture_date,
+        TO_CHAR(expiry_date, \'dd-mm-yyyy\') as expiry_date,
         height,
         width,
         a.from_date,
@@ -79,10 +79,6 @@ class Assets extends Model
         ->whereNull('ssg.deleted_at')
         ->orderBy('transaction_id', 'desc')
         ->take(1);
-
-        if ($id_station != '') {
-            $query->where('s.station_id', '!=', 5);
-        }
 
         return $query->first();
     }

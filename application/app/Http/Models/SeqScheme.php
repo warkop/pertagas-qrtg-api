@@ -86,24 +86,9 @@ class SeqScheme extends Model
 
     public function getResultByStation($station_id)
     {
-        // $query = DB::table('seq_scheme as ss')
-        // ->select('r.result_id', 'r.result_name', 'r.result_desc','station_name', 'ss.station_id')
-        // ->join('results as r', 'ss.result_id', '=', 'r.result_id')
-        // ->join('stations as s', 'ss.station_id', '=', 's.station_id')
-        // ->where('ss.station_id', $station_id)
-        // ->where('predecessor_station_id', $predecessor_id)
-        // ->where('ss.result_id', $result_id)
-        // ->groupBy('r.result_id', 's.station_name', 'ss.station_id')
-        // ->get();
-
         $query = DB::table('results as r')
         ->select('r.result_id', 'r.result_name', 'r.result_desc')
-        // ->join('results as r', 'ss.result_id', '=', 'r.result_id')
-        // ->join('stations as s', 'ss.station_id', '=', 's.station_id')
         ->where('r.station_id', $station_id)
-        // ->where('predecessor_station_id', $predecessor_id)
-        // ->where('ss.result_id', $result_id)
-        // ->groupBy('r.result_id', 's.station_name', 'ss.station_id')
         ->get();
 
         return $query;
