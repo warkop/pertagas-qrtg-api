@@ -8,7 +8,7 @@ use App\Http\Models\Transactions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-
+use Illuminate\Support\Facades\File;
 
 class AssetsController extends Controller
 {
@@ -17,11 +17,6 @@ class AssetsController extends Controller
     private $responseMessage = '';
     private $responseData = [];
     private $responseNote = null;
-
-    public function __construct()
-    {
-        //
-    }
 
     public function index(Request $req)
     {
@@ -202,22 +197,26 @@ class AssetsController extends Controller
                         $resource = Assets::find($res->asset_id);
 
                         $resource->pics_url = $pics_url;
-                        $resource->save();
+                        $resource->save();                        
                     }
 
                     $arr_store = [
                         'asset_id' => $res->asset_id,
                         'station_id' => 1,
                         'result_id' => 13,
+                        'snapshot_url' => $pics_url,
                         'created_at' => date('Y-m-d H:i:s'),
                         'created_by' => $user->id_user,
                     ];
 
                     $saved = Transactions::create($arr_store);
+                    if ($req->file('pics_url')->isValid()) {
+                        File::copy($destinationPath.'/'.$pics_url, storage_path('app/public').'/transactions/'.$saved->transaction_id.'/'.$pics_url);
+                    }
 
                     $this->responseCode = 201;
-                    $this->responseMessage = 'Asset berhasil disimpan!';
-                    $this->responseData = $req->all();
+                    $this->responseMessage = 'Tabung berhasil disimpan!';
+                    $this->responseData = $resource;
     
                     $response = helpResponse($this->responseCode, $this->responseData, $this->responseMessage, $this->responseStatus);
                 }
