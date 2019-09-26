@@ -95,7 +95,9 @@ class TransactionsController extends Controller
                 $this->responseCode = 500;
                 $this->responseMessage = 'Tabung tidak sesuai posisi station Anda, silahkan login dengan akun lain atau scan Tabung yang lain!';
             } else {
-                if ($user->id_station != $res_trans->station_id) {
+                $res_station_role = StationRole::where('role_id', $user->role)->where('station_id', $user->id_station)->take(1)->first();
+                print_r($res_station_role->station_id);
+                if ($res_trans->station_id == $res_station_role->station_id) {
                     $res_document = Document::where('document_status', 4)->where('destination_station_id', $user->id_station)->orderBy('document_id', 'desc')->first();
                     if (!empty($res_document)) {
                         $res_stock_movement = StockMovement::where('document_id', $res_document->document_id)->where('asset_id', $id_asset)->where('stock_move_status', 2)->first();

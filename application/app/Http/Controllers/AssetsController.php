@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class AssetsController extends Controller
 {
@@ -211,7 +212,7 @@ class AssetsController extends Controller
 
                     $saved = Transactions::create($arr_store);
                     if ($req->file('pics_url')->isValid()) {
-                        File::copy($destinationPath.'/'.$pics_url, storage_path('app/public').'/transactions/'.$saved->transaction_id.'/'.$pics_url);
+                        Storage::copy($destinationPath.'/'.$pics_url, storage_path('app/public').'/transactions/'.$saved->transaction_id.'/'.$pics_url);
                     }
 
                     $this->responseCode = 201;
@@ -266,6 +267,8 @@ class AssetsController extends Controller
         $destroy = $res->forceDelete();
 
         if ($destroy) {
+            // Storage::delete('assets');
+
             $responseCode = 202;
             $responseMessage = 'Asset berhasil dihapus semua!';
             $responseData = $destroy;
