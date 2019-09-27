@@ -30,6 +30,11 @@ class SeqScheme extends Model
 
     public $timestamps  = false;
 
+    public function stations()
+    {
+        return $this->hasMany('App\Http\Models\Stations', 'predecessor_station_id', 'station_id');
+    }
+
     public function showFlow()
     {
         $query = DB::table(DB::raw('seq_scheme ss'))->select(DB::raw('seq_scheme_id,

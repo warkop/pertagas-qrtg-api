@@ -85,7 +85,7 @@ class TransactionsController extends Controller
             $this->responseCode = 400;
             $this->responseMessage = $validator->errors();
         } else {
-            $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('transaction_id', 'desc')->take(1)->first();
+            $res_trans = Transactions::where('asset_id', $id_asset)->orderBy('transaction_id', 'desc')->first();
             $seq_scheme = SeqScheme::where('station_id', $user->id_station)
                 ->where('predecessor_station_id', $res_trans->station_id)
                 ->where('result_id', $res_trans->result_id)
@@ -95,11 +95,45 @@ class TransactionsController extends Controller
                 $this->responseCode = 500;
                 $this->responseMessage = 'Tabung tidak sesuai posisi station Anda, silahkan login dengan akun lain atau scan Tabung yang lain!';
             } else {
-                $res_station_role = StationRole::where('role_id', $user->role)->where('station_id', $user->id_station)->take(1)->first();
-                print_r($res_station_role->station_id);
-                if ($res_trans->station_id == $res_station_role->station_id) {
+                $res_station_role = StationRole::where('station_id', $res_trans->station_id)->first();
+                if ($res_station_role->role_id == $user->role) {
+                    $station = $this->processing($res_trans->station_id, $res_trans->result_id);
+
+                    $arr_store = [
+                        'asset_id' => $id_asset,
+                        'station_id' => $station,
+                        'result_id' => $id_result,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'created_by' => $user->id_user,
+                    ];
+
+                    $saved = Transactions::create($arr_store);
+
+                    if (!$saved) {
+                        $this->responseCode = 502;
+                        $this->responseMessage = 'Data gagal disimpan!';
+                    } else {
+                        $snapshot = $req->file('snapshot_url')->getClientOriginalName();
+                        if ($req->file('snapshot_url')->isValid()) {
+                            $destinationPath = storage_path('app/public') . '/transactions/' . $saved->transaction_id;
+                            $req->file('snapshot_url')->move($destinationPath, $snapshot);
+
+                            $temp_trans = Transactions::find($saved->transaction_id);
+
+                            $temp_trans->snapshot_url = $snapshot;
+                            $temp_trans->save();
+                            $this->responseMessage = 'Data berhasil disimpan!';
+                        } else {
+                            $this->responseMessage = 'Data berhasil disimpan, tapi file yang Anda unggah tidak ikut tersimpan karena tidak valid';
+                        }
+
+                        $this->responseCode = 201;
+                        $this->responseData = $temp_trans;
+                    }
+                } else {
                     $res_document = Document::where('document_status', 4)->where('destination_station_id', $user->id_station)->orderBy('document_id', 'desc')->first();
                     if (!empty($res_document)) {
+                        echo $res_document->destination_station_id;
                         $res_stock_movement = StockMovement::where('document_id', $res_document->document_id)->where('asset_id', $id_asset)->where('stock_move_status', 2)->first();
                         if (!empty($res_stock_movement)) {
                             $station = $this->processing($res_trans->station_id, $res_trans->result_id);
@@ -142,40 +176,6 @@ class TransactionsController extends Controller
                     } else {
                         $this->responseCode = 500;
                         $this->responseMessage = 'Tabung belum masuk Good Receive atau Good Receive dari Tabung bersangkutan belum di setujui!';
-                    }
-                } else {
-                    $station = $this->processing($res_trans->station_id, $res_trans->result_id);
-
-                    $arr_store = [
-                        'asset_id' => $id_asset,
-                        'station_id' => $station,
-                        'result_id' => $id_result,
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'created_by' => $user->id_user,
-                    ];
-
-                    $saved = Transactions::create($arr_store);
-
-                    if (!$saved) {
-                        $this->responseCode = 502;
-                        $this->responseMessage = 'Data gagal disimpan!';
-                    } else {
-                        $snapshot = $req->file('snapshot_url')->getClientOriginalName();
-                        if ($req->file('snapshot_url')->isValid()) {
-                            $destinationPath = storage_path('app/public') . '/transactions/' . $saved->transaction_id;
-                            $req->file('snapshot_url')->move($destinationPath, $snapshot);
-
-                            $temp_trans = Transactions::find($saved->transaction_id);
-
-                            $temp_trans->snapshot_url = $snapshot;
-                            $temp_trans->save();
-                            $this->responseMessage = 'Data berhasil disimpan!';
-                        } else {
-                            $this->responseMessage = 'Data berhasil disimpan, tapi file yang Anda unggah tidak ikut tersimpan karena tidak valid';
-                        }
-
-                        $this->responseCode = 201;
-                        $this->responseData = $temp_trans;
                     }
                 }
             }

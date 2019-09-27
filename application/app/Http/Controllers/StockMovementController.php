@@ -383,7 +383,7 @@ class StockMovementController extends Controller
 
             $res = Document::find($id_document);
 
-            $res_station_role = StationRole::where('role_id', $user->role)->where('station_id', $id_destination_station)->get();
+            $res_station_role = SeqScheme::where('predecessor_station_id', $user->id_station)->where('station_id', $id_destination_station)->get();
             if (!$res_station_role->isEmpty()) {
                 $res->destination_station_id    = $id_destination_station;
                 $res->start_date                = date('Y-m-d', strtotime($start_date));
@@ -420,7 +420,8 @@ class StockMovementController extends Controller
         $user = $req->get('my_auth');
         $stock_movement = new StockMovement;
 
-        $res = $stock_movement->listDestination($user->role);
+        // $res = SeqScheme::where('predecessor_station_id', $user->id_station)->get();
+        $res = $stock_movement->listDestination($user->id_station);
 
         $this->responseCode = 200;
         $this->responseData = $res;
