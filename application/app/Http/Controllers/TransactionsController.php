@@ -132,8 +132,8 @@ class TransactionsController extends Controller
                     }
                 } else {
                     $res_document = Document::where('document_status', 4)->where('destination_station_id', $user->id_station)->orderBy('document_id', 'desc')->first();
-                    if (!empty($res_document)) {
-                        echo $res_document->destination_station_id;
+                    $trans = Transactions::where('asset_id', $id_asset)->orderBy('transaction_id', 'desc')->first();
+                    if ($res_document->destination_station_id == $trans->station_id) {
                         $res_stock_movement = StockMovement::where('document_id', $res_document->document_id)->where('asset_id', $id_asset)->where('stock_move_status', 2)->first();
                         if (!empty($res_stock_movement)) {
                             $station = $this->processing($res_trans->station_id, $res_trans->result_id);
