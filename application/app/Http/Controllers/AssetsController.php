@@ -205,15 +205,15 @@ class AssetsController extends Controller
                         'asset_id' => $res->asset_id,
                         'station_id' => 1,
                         'result_id' => 13,
-                        'snapshot_url' => $pics_url,
+                        // 'snapshot_url' => $pics_url,
                         'created_at' => date('Y-m-d H:i:s'),
                         'created_by' => $user->id_user,
                     ];
 
                     $saved = Transactions::create($arr_store);
-                    if ($req->file('pics_url')->isValid()) {
-                        Storage::copy($destinationPath.'/'.$pics_url, storage_path('app/public').'/transactions/'.$saved->transaction_id.'/'.$pics_url);
-                    }
+                    // if ($req->file('pics_url')->isValid()) {
+                    //     Storage::copy($destinationPath.'/'.$pics_url, storage_path('app/public').'/transactions/'.$saved->transaction_id.'/'.$pics_url);
+                    // }
 
                     $this->responseCode = 201;
                     $this->responseMessage = 'Tabung berhasil disimpan!';
