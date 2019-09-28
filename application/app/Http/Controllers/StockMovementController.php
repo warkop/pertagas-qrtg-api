@@ -297,6 +297,7 @@ class StockMovementController extends Controller
             'document_id'         => ['required',
             Rule::exists('document')->where(function ($query) use ($id_document) {
                 $query->where('document_id',  $id_document);
+                $query->where('document_status',  3);
             })],
             'asset_id'         => ['required',
             Rule::exists('assets')->where(function ($query) use ($id_asset) {

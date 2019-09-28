@@ -133,49 +133,56 @@ class TransactionsController extends Controller
                 } else {
                     $res_document = Document::where('document_status', 4)->where('destination_station_id', $user->id_station)->orderBy('document_id', 'desc')->first();
                     $trans = Transactions::where('asset_id', $id_asset)->orderBy('transaction_id', 'desc')->first();
-                    if ($res_document->destination_station_id == $trans->station_id) {
-                        $res_stock_movement = StockMovement::where('document_id', $res_document->document_id)->where('asset_id', $id_asset)->where('stock_move_status', 2)->first();
-                        if (!empty($res_stock_movement)) {
-                            $station = $this->processing($res_trans->station_id, $res_trans->result_id);
+                    // print_r($res_document);
+                    // print_r($trans->station_id);
+                    if (!empty($res_document)) {
+                        if ($res_document->station_id == $trans->station_id && $res_document->destination_station_id == $user->id_station) {
+                            $res_stock_movement = StockMovement::where('document_id', $res_document->document_id)->where('asset_id', $id_asset)->where('stock_move_status', 2)->first();
+                            if (!empty($res_stock_movement)) {
+                                $station = $this->processing($res_trans->station_id, $res_trans->result_id);
 
-                            $arr_store = [
-                                'asset_id' => $id_asset,
-                                'station_id' => $station,
-                                'result_id' => $id_result,
-                                'created_at' => date('Y-m-d H:i:s'),
-                                'created_by' => $user->id_user,
-                            ];
+                                $arr_store = [
+                                    'asset_id' => $id_asset,
+                                    'station_id' => $station,
+                                    'result_id' => $id_result,
+                                    'created_at' => date('Y-m-d H:i:s'),
+                                    'created_by' => $user->id_user,
+                                ];
 
-                            $saved = Transactions::create($arr_store);
+                                $saved = Transactions::create($arr_store);
 
-                            if (!$saved) {
-                                $this->responseCode = 502;
-                                $this->responseMessage = 'Data gagal disimpan!';
-                            } else {
-                                $snapshot = $req->file('snapshot_url')->getClientOriginalName();
-                                if ($req->file('snapshot_url')->isValid()) {
-                                    $destinationPath = storage_path('app/public') . '/transactions/' . $saved->transaction_id;
-                                    $req->file('snapshot_url')->move($destinationPath, $snapshot);
-
-                                    $temp_trans = Transactions::find($saved->transaction_id);
-
-                                    $temp_trans->snapshot_url = $snapshot;
-                                    $temp_trans->save();
-                                    $this->responseMessage = 'Data berhasil disimpan!';
+                                if (!$saved) {
+                                    $this->responseCode = 502;
+                                    $this->responseMessage = 'Data gagal disimpan!';
                                 } else {
-                                    $this->responseMessage = 'Data berhasil disimpan, tapi file yang Anda unggah tidak ikut tersimpan karena tidak valid';
-                                }
+                                    $snapshot = $req->file('snapshot_url')->getClientOriginalName();
+                                    if ($req->file('snapshot_url')->isValid()) {
+                                        $destinationPath = storage_path('app/public') . '/transactions/' . $saved->transaction_id;
+                                        $req->file('snapshot_url')->move($destinationPath, $snapshot);
 
-                                $this->responseCode = 201;
-                                $this->responseData = $temp_trans;
+                                        $temp_trans = Transactions::find($saved->transaction_id);
+
+                                        $temp_trans->snapshot_url = $snapshot;
+                                        $temp_trans->save();
+                                        $this->responseMessage = 'Data berhasil disimpan!';
+                                    } else {
+                                        $this->responseMessage = 'Data berhasil disimpan, tapi file yang Anda unggah tidak ikut tersimpan karena tidak valid';
+                                    }
+
+                                    $this->responseCode = 201;
+                                    $this->responseData = $temp_trans;
+                                }
+                            } else {
+                                $this->responseCode = 500;
+                                $this->responseMessage = 'Tabung tidak ikut discan pada Good Receive! Silahkan buat ulang Stock Movement dari awal!';
                             }
                         } else {
                             $this->responseCode = 500;
-                            $this->responseMessage = 'Tabung tidak ikut discan pada Good Receive! Silahkan buat ulang Stock Movement dari awal!';
+                            $this->responseMessage = 'Tabung belum masuk Good Receive atau Good Receive dari Tabung bersangkutan belum di setujui!';
                         }
                     } else {
                         $this->responseCode = 500;
-                        $this->responseMessage = 'Tabung belum masuk Good Receive atau Good Receive dari Tabung bersangkutan belum di setujui!';
+                        $this->responseMessage = 'Tidak ada Good Receive dari Tabung bersangkutan!';
                     }
                 }
             }
