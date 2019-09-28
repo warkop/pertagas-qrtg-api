@@ -16,7 +16,8 @@ class SeqSchemeGroupTableSeeder extends Seeder
             'group_desc' => 'Pertamina dan Gas',
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
-            'from_date' => date('Y-m-d H:i:s'),
+            'from_date' => date('Y-m-d', strtotime('2019-01-01')),
+            'end_date' => date('Y-m-d', strtotime('2040-12-31')),
         ]);
     }
 }
