@@ -90,7 +90,7 @@ class TransactionsController extends Controller
                 ->where('predecessor_station_id', $res_trans->station_id)
                 ->where('result_id', $res_trans->result_id)
                 ->first();
-
+            // print_r($res_trans->station_id);
             if (empty($seq_scheme)) {
                 $this->responseCode = 500;
                 $this->responseMessage = 'Tabung tidak sesuai posisi station Anda, silahkan login dengan akun lain atau scan Tabung yang lain!';
@@ -136,8 +136,13 @@ class TransactionsController extends Controller
                     // print_r($res_document);
                     // print_r($trans->station_id);
                     if (!empty($res_document)) {
+                        // print_r($res_document->station_id);
+                        // print_r($trans->station_id);
+                        // print_r($res_document->destination_station_id);
+                        // print_r($user->id_station);
                         if ($res_document->station_id == $trans->station_id && $res_document->destination_station_id == $user->id_station) {
-                            $res_stock_movement = StockMovement::where('document_id', $res_document->document_id)->where('asset_id', $id_asset)->where('stock_move_status', 2)->first();
+                            $res_stock_movement = StockMovement::where('document_id', $res_document->document_id)->where('asset_id', $id_asset)->where('stock_move_status', 2)->where('used', 0)->first();
+
                             if (!empty($res_stock_movement)) {
                                 $station = $this->processing($res_trans->station_id, $res_trans->result_id);
 
@@ -168,6 +173,9 @@ class TransactionsController extends Controller
                                     } else {
                                         $this->responseMessage = 'Data berhasil disimpan, tapi file yang Anda unggah tidak ikut tersimpan karena tidak valid';
                                     }
+
+                                    $res_stock_movement->used = 1;
+                                    $res_stock_movement->save();
 
                                     $this->responseCode = 201;
                                     $this->responseData = $temp_trans;
